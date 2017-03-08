@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./combine.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Combine</name>
+    
+    <shortDescription>
+        This node returns an aggregated geometry from a collection of geometries.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This node returns a GEOMETRYCOLLECTION or a MULTI object from a set of geometries.
+        </intro>
+        
+        
+        <option name="Combined by">Select the column name to combine geometry based on same value for given column. If no column is 
+        selected here then this operation combine all geometries in the input table.</option>
+        
+        <!-- possibly more options that can also be grouped by tabs -->
+        <!--
+        <tab name="Standard Options">
+            <option name="short name of first option (like in the dialog)">description of first option</option>
+            <option name="short name of second option (like in the dialog)">description of second option</option>
+        </tab>
+        <tab name="Advanced Options">
+            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
+        </tab>
+        -->
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Geometry Table">Table containing a single geometry list in GeoJSON format with other attributes. The geometry column name should be prefixed with "the_geom".</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="Combined Table">Table containing list of geometries (or a single geometry) after combining them. Other non-spatial attributes are combined together as comma separated list.</outPort>
+        <!-- possibly more output ports here-->
+    </ports>    
+    <views>
+        <view index="0" name="No view">No view is available for this node.</view>
+        <!--view index="1" name="name of second view">Description of second view...</view-->
+    </views>
+</knimeNode>

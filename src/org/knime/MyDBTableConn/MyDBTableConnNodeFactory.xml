@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./database_next-128.png" type="Source" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Table Connector</name>
+    
+    <shortDescription>
+        This is a Database Table Connection Test.TG
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This is a Database Table Connection, it can Connect different Database and open a table. TG</intro>
+        
+        
+    <!--    <option name="short name of first option (like in the dialog)">description of first option</option> -->
+    <!--    <option name="short name of second option (like in the dialog)">description of second option</option> -->
+    <option name="Database Driver">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+		Additional driver can be registered via KNIME's preference page
+        (Database Driver).
+	</option>
+    <option name="Database URL">
+        Enter the database name here, for example 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	</option>
+	<option name="Workflow Credentials">
+        If checked, the credentials (user and password) are used as defined on 
+        the workflow. The credential name links to the specified user and 
+        password. Those can be replaced or edit using the 'Workflow Credentials'
+        menu available in the workflow context menu.
+    </option>    
+    <option name="User Name">
+        Your log-in user name for the database.
+	</option>
+	<option name="Password">
+        Your log-in password for the database. Note, the password is
+        de- and encrypted before handling it internally.
+	</option>
+    <option name="TimeZone">
+	    Select the TimeZone to convert the date, time or timestamp field into. The current implementation can't 
+	    represent time zones. In order to support persisting those fields into a database, the time values can be 
+	    changed according to the selected time zone, which is used as the offset (including the daylight saving time)
+        for the original values: <i>No Correction (use UTC)</i> is used for workflows (created before 2.8) and doesn't
+        apply any correction, <i>Use local TimeZone</i> uses the local time zone offset to correct the date field 
+        before reading or writing, and <i>TimeZone: </i> allows selecting the time zone to covert the date values into.  
+	</option>
+	<option name="SQL Statement">
+        Enter the SQL-like query here, for example SELECT * FROM table.
+        <br/>
+        Additional SQL commands (create, drop, set parameter, etc.) can be 
+        arrange in front of the actual SELECT statement and are execute 
+        together line-by-line during configure and execute. Note, those 
+        additional SQL commands need to be separated by semicolon.
+	</option>
+    <option name="Database Browser">
+        Click <i>Fetch Metadata</i> to connect to the database using the
+        entered settings and to fetch all tables and display them grouped by 
+        type in a tree view.
+        Click on any table to retrieve all contained columns. Double-click on a table 
+        or column to insert its name into the SQL query at the current 
+        cursor position.
+    </option>
+	<option name="Flow Variable List">
+       The list contains the flow variables that are currently available at
+       the node input. Double clicking any of the entries will insert the
+       respective identifier at the current cursor position (replacing the
+       selection, if any).
+    </option>
+    
+        
+        <!-- possibly more options that can also be grouped by tabs -->
+        <!--
+        <tab name="Standard Options">
+            <option name="short name of first option (like in the dialog)">description of first option</option>
+            <option name="short name of second option (like in the dialog)">description of second option</option>
+        </tab>
+        <tab name="Advanced Options">
+            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
+        </tab>
+        -->
+        
+    </fullDescription>
+    
+    <ports>
+      <!--  <inPort index="0" name="In-Port name">Description of first input port...</inPort> -->
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="Database Connection">TG:Database connection object</outPort>
+        <!-- possibly more output ports here-->
+    </ports>    
+   
+    <!-- <views> -->
+    <!--   <view index="0" name="name of first view">Description of first view...</view> -->
+        <!--view index="1" name="name of second view">Description of second view...</view-->
+    <!-- </views> -->
+    
+    
+</knimeNode>

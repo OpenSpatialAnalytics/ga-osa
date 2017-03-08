@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./listhdr.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>List hdr</name>
+    
+    <shortDescription>
+        List raster files with .hdr extension
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This nodes return a list of .hrd raster files for a given list of .zip file in the input table.</intro>
+        
+        
+<!--         <option name="short name of first option (like in the dialog)">description of first option</option> -->
+<!--         <option name="short name of second option (like in the dialog)">description of second option</option> -->
+        <!-- possibly more options that can also be grouped by tabs -->
+        <!--
+        <tab name="Standard Options">
+            <option name="short name of first option (like in the dialog)">description of first option</option>
+            <option name="short name of second option (like in the dialog)">description of second option</option>
+        </tab>
+        <tab name="Advanced Options">
+            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
+        </tab>
+        -->
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Location of Zip files">List of zip file or directory location containing .hdr raster files.</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="List of hdr files">List of .hdr raster files (full location) inside the .zip files or directory listed in input table</outPort>
+        <!-- possibly more output ports here-->
+    </ports>    
+    <views>
+        <view index="0" name="No View">No view is available for this node.</view>
+        <!--view index="1" name="name of second view">Description of second view...</view-->
+    </views>
+</knimeNode>

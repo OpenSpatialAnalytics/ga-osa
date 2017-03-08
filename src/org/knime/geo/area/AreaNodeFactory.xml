@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./area.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Area</name>
+    
+    <shortDescription>
+        Area of Geometry
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>This node returns the <a href="http://docs.geotools.org/latest/javadocs/org/geotools/filter/AreaFunction.html#getArea-com.vividsolutions.jts.geom.Geometry-">area</a> 
+        of geometries listed in input table and add an area column in output table. The input table must contain a geometry column with the name "the_geom"" and geometries must be in GeoJSON format.</intro>
+                
+        <!--option name="the_geom">description of first option</option-->
+        <!-- possibly more options that can also be grouped by tabs -->
+        <!--
+        <tab name="Standard Options">
+            <option name="short name of first option (like in the dialog)">description of first option</option>
+            <option name="short name of second option (like in the dialog)">description of second option</option>
+        </tab>
+        <tab name="Advanced Options">
+            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
+        </tab>
+        -->
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Geometry Table">Table containing a geometry column in GeoJSON format with other attributes. The geometry column name should be prefixed with "the_geom"".</inPort>        
+        <outPort index="0" name="Geometry Area Table">Table containing an area column along with all columns in input table.</outPort>
+    </ports>    
+    <views>
+        <view index="0" name="No view">No view is available for this node.</view>
+    </views>
+</knimeNode>

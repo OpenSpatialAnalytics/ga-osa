@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./merge_shapes.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>Shapefile Merge</name>
+    
+    <shortDescription>
+        Merge a list of shapefiles into a single shapefile
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This node takes a list of shapefile location in the input table and perform merging operation using <a href="http://www.gdal.org/ogr2ogr.html">ogr2ogr</a>
+        command. It generates a single shape file in the desired location. The output table contains the location of generated shapefile.
+        </intro>
+        
+        
+        <option name="Output Shapefile">Enter a valid file name with or without ".shp" extension. 
+        You can select a location from the "Browse..." dialog and then type your desired filename after the location 
+		</option>
+        <!-- possibly more options that can also be grouped by tabs -->
+        <!--
+        <tab name="Standard Options">
+            <option name="short name of first option (like in the dialog)">description of first option</option>
+            <option name="short name of second option (like in the dialog)">description of second option</option>
+        </tab>
+        <tab name="Advanced Options">
+            <option name="short name of first advanced option (like in the dialog)">description of first advanced option</option>
+        </tab>
+        -->
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Shapefile location Table">The locations of source shapefiles. The table must contain a "Location" column.</inPort>
+        <!-- possibly more input ports here-->
+        <outPort index="0" name="Shapefile location Table">The location of the generated shapefile. It uses "Location" as column header.</outPort>
+        <!-- possibly more output ports here-->
+    </ports>    
+    <views>
+        <view index="0" name="No view">No view option available for this node.</view>
+        <!--view index="1" name="name of second view">Description of second view...</view-->
+    </views>
+</knimeNode>

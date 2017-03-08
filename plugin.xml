@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse version="3.0"?><plugin>
+      <extension point="org.knime.workbench.repository.categories">
+      <category description="Geo-Spatial operations of GeoTools" icon="icons/geom.png" level-id="geo" name="Geo-spatial Data Processing" path="/">
+	  </category>
+      <category description="Reading and writing geometry files" icon="icons/io.png" level-id="io" name="IO" path="/geo">
+      </category>
+      <category description="Basic Geo-Spatial operations." icon="icons/operations.png" level-id="operations" name="Geoprocesing" path="/geo">
+      </category>
+      <category description="Geometry conversion" icon="icons/conversion.png" level-id="conv" name="Conversion" path="/geo">
+      </category>
+      <category description="Describe geometry" icon="icons/info.png" level-id="info" name="Geometry Info" path="/geo">
+      </category>
+      <category description="Geo map visualization" icon="icons/visualization.png" level-id="view" name="Map Viewer" path="/geo">
+      </category>
+      <category description="GDAL raster operations" icon="icons/gdal.png" level-id="gdal" name="Raster Operations" path="/geo">         
+      </category>    
+      <category description="Boolean operations" icon="icons/boolean.png" level-id="bool" name="Boolean Operations" path="/geo">         
+      </category>  
+       <category description="PostGIS operations" icon="icons/database-128.png" level-id="db" name="PostGIS Operations" path="/geo">         
+      </category>           
+   	</extension>
+   
+ <extension point="org.knime.workbench.repository.nodes">
+    <node category-path="/geo/io" factory-class="org.knime.geo.reader.ShapeFileReaderNodeFactory" id="org.knime.geo.spatial.ShapeFileReaderNodeFactory"/>
+    <node category-path="/geo/io" factory-class="org.knime.geo.writer.ShapeFileWriterNodeFactory" id="org.knime.geo.writer.ShapeFileWriterNodeFactory"/>
+    <node category-path="/geo/io" factory-class="org.knime.geo.shpmerge.ShapeMergeNodeFactory" id="org.knime.geo.shpmerge.ShapeMergeNodeFactory"/>
+	<node category-path="/geo/io" factory-class="org.knime.geo.listhdr.ListHdrNodeFactory" id="org.knime.geo.listhdr.ListHdrNodeFactory"/>
+	<node category-path="/geo/io" factory-class="org.knime.geo.rank.RankFilesNodeFactory" id="org.knime.geo.rank.RankFilesNodeFactory"/>
+   	<node category-path="/geo/view" factory-class="org.knime.geo.visualizer.GeoMapViewerNodeFactory" id="org.knime.geo.visualizer.GeoMapViewerNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.buffer.BufferNodeFactory" id="org.knime.geo.buffer.BufferNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.intersection.IntersectionNodeFactory" id="org.knime.geo.intersection.IntersectionNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.union.UnionNodeFactory" id="org.knime.geo.union.UnionNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.difference.DifferenceNodeFactory" id="org.knime.geo.difference.DifferenceNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.split.SplitNodeFactory" id="org.knime.geo.split.SplitNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.convex.ConvexHullNodeFactory" id="org.knime.geo.convex.ConvexHullNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.unary.UnaryUnionNodeFactory" id="org.knime.geo.unary.UnaryUnionNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.combine.CombineNodeFactory" id="org.knime.geo.combine.CombineNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.removepoints.RemoveRepPointsNodeFactory" id="org.knime.geo.removepoints.RemoveRepPointsNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.mbr.MinBoundingRectNodeFactory" id="org.knime.geo.mbr.MinBoundingRectNodeFactory"/>
+	<node category-path="/geo/operations" factory-class="org.knime.geo.reomovehole.RemoveHolesNodeFactory" id="org.knime.geo.reomovehole.RemoveHolesNodeFactory"/>
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.resample.ResampleNodeFactory" id="org.knime.geo.resample.ResampleNodeFactory"/>
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.mosaic.MosaicNodeFactory" id="org.knime.geo.mosaic.MosaicNodeFactory"/>	
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.mask.MaskRasterNodeFactory" id="org.knime.geo.mask.MaskRasterNodeFactory"/>
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.calc.GdalCalcNodeFactory" id="org.knime.geo.calc.GdalCalcNodeFactory"/>
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.clip.ClipPolygonToRasterNodeFactory" id="org.knime.geo.clip.ClipPolygonToRasterNodeFactory"/>
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.rasterize.RasterizeNodeFactory" id="org.knime.geo.rasterize.RasterizeNodeFactory"/>
+	<node category-path="/geo/gdal" factory-class="org.knime.geo.proximity.ProximityNodeFactory" id="org.knime.geo.proximity.ProximityNodeFactory"/>					
+	<node category-path="/geo/conv" factory-class="org.knime.geo.filter.FilterGeomNodeFactory" id="org.knime.geo.filter.FilterGeomNodeFactory"/>  
+	<node category-path="/geo/conv" factory-class="org.knime.geo.polygontoline.PolygonToLineNodeFactory" id="org.knime.geo.polygontoline.PolygonToLineNodeFactory"/>
+ 	<node category-path="/geo/conv" factory-class="org.knime.geo.multtoply.MultiPolygonToPolygonNodeFactory" id="org.knime.geo.multtoply.MultiPolygonToPolygonNodeFactory"/>
+ 	<node category-path="/geo/conv" factory-class="org.knime.geo.snapper.SnapToGridNodeFactory" id="org.knime.geo.snapper.SnapToGridNodeFactory"/>
+	<node category-path="/geo/info" factory-class="org.knime.geo.centroid.CentroidsNodeFactory" id="org.knime.geo.centroid.CentroidsNodeFactory"/>
+	<node category-path="/geo/info" factory-class="org.knime.geo.linemerge.LineMergerNodeFactory" id="org.knime.geo.linemerge.LineMergerNodeFactory"/>
+	<node category-path="/geo/info" factory-class="org.knime.geo.length.LengthNodeFactory" id="org.knime.geo.length.LengthNodeFactory"/>
+	<node category-path="/geo/info" factory-class="org.knime.geo.linepoint.LinePointsNodeFactory" id="org.knime.geo.linepoint.LinePointsNodeFactory"/>
+	<node category-path="/geo/info" factory-class="org.knime.geo.distance.DistanceNodeFactory" id="org.knime.geo.distance.DistanceNodeFactory"/>
+	<node category-path="/geo/info" factory-class="org.knime.geo.area.AreaNodeFactory" id="org.knime.geo.area.AreaNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.intersects.IntersectsNodeFactory" id="org.knime.geo.bool.intersects.IntersectsNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.touches.TouchesNodeFactory" id="org.knime.geo.bool.touches.TouchesNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.contains.ContainsNodeFactory" id="org.knime.geo.bool.contains.ContainsNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.covers.CoversNodeFactory" id="org.knime.geo.bool.covers.CoversNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.crosses.CrossesNodeFactory" id="org.knime.geo.bool.crosses.CrossesNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.coveredBy.CoveredByNodeFactory" id="org.knime.geo.bool.coveredBy.CoveredByNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.disjoint.DisjointNodeFactory" id="org.knime.geo.bool.disjoint.DisjointNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.overlap.OverlapNodeFactory" id="org.knime.geo.bool.overlap.OverlapNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.within.WithinNodeFactory" id="org.knime.geo.bool.within.WithinNodeFactory"/>
+	<node category-path="/geo/bool" factory-class="org.knime.geo.bool.equals.EqualsNodeFactory" id="org.knime.geo.bool.equals.EqualsNodeFactory"/>
+	<node category-path="/geo/conv" factory-class="org.knime.geo.transform.TransformNodeFactory" id="org.knime.geo.transform.TransformNodeFactory"/>	
+	<node category-path="/geo/db" factory-class="org.knime.MyDBTableConn.MyDBTableConnNodeFactory" id="org.knime.MyDBTableConn.MyDBTableConnNodeFactory"/>
+    <node category-path="/geo/db" factory-class="org.knime.MyDBConn.MyDBConnNodeFactory" id="org.knime.MyDBConn.MyDBConnNodeFactory"/>
+    <node category-path="/geo/db" factory-class="org.knime.MyDBReader.MyDBReaderNodeFactory" id="org.knime.MyDBReader.MyDBReaderNodeFactory"/>
+    <!--node category-path="/geo/db" factory-class="org.knime.MyPortDBConn.MyPortDBConnNodeFactory" id="org.knime.MyPortDBConn.MyPortDBConnNodeFactory"/-->
+    <node category-path="/geo/db" factory-class="org.knime.MyDBWriter.MyDBWriterNodeFactory" id="org.knime.MyDBWriter.MyDBWriterNodeFactory"/>
+ </extension>
+	<extension point="org.knime.core.PortType">
+	      <portType color="#00FF00" hidden="false" name="MyDatabase Conn" objectClass="org.knime.mynode.myport.MyDatabaseConnPortObject" objectSerializer="org.knime.mynode.myport.MyDatabaseConnPortObject$Serializer" specClass="org.knime.mynode.myport.MyDatabaseConnPortObjectSpec" specSerializer="org.knime.mynode.myport.MyDatabaseConnPortObjectSpec$Serializer">
+	      </portType>
+	 </extension>
+   
+</plugin>
