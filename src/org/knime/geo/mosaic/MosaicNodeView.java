@@ -1,17 +1,7 @@
 package org.knime.geo.mosaic;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-
-import org.geotools.swing.JMapFrame;
 import org.knime.core.node.NodeView;
-import org.knime.gdalutils.Utility;
+
 
 /**
  * <code>NodeView</code> for the "Mosaic" Node.

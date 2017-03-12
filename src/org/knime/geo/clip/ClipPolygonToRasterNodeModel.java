@@ -13,7 +13,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -121,12 +120,14 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 		
 		DataTableSpec outSpec = createSpec(inTable.getSpec(),useOverlap, useRank, useOverlapOnly);
 		BufferedDataContainer container = exec.createDataContainer(outSpec);
+		
+		List<String> srcTifFileList = new ArrayList<String>(); 
+		List<String> destFileList = new ArrayList<String>(); 
+		List<String> exprList = new ArrayList<String>(); 
+		List<DataCell []> cellList = new ArrayList<DataCell []>(); 
 				
-		int i = 0;
-		long s = inTable.size();
 		for (DataRow r : inTable){
-			//StringCell inPathCell = (StringCell)r.getCell(loc);
-	    	//String srcTifFile = inPathCell.getStringValue();
+			
 	    	if (useOverlap){
 	    		int j = 0;
 	    		int rankIndexs[] = new int[2];
@@ -151,26 +152,18 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 	    		String destFile1 = outFolder + "/" + ovidStr +"a.tif";
 	    		String destFile2 = outFolder + "/" + ovidStr +"b.tif";
 	    		
-	    		
-	    		Utility.ClipRaster(overlapShapeFile, srcTifFile1, destFile1, 
-		    			overWrite.getBooleanValue(), tap.getBooleanValue(), 
-		    			xRes.getStringValue(), yRes.getStringValue(),
-		    			noDataValue.getStringValue(),
-		    			woName.getStringValue(),woValue.getStringValue(),expr);
-	    		
-	    		Utility.ClipRaster(overlapShapeFile, srcTifFile2, destFile2, 
-		    			overWrite.getBooleanValue(), tap.getBooleanValue(), 
-		    			xRes.getStringValue(), yRes.getStringValue(),
-		    			noDataValue.getStringValue(),
-		    			woName.getStringValue(),woValue.getStringValue(),expr);
-	    		
+	    		srcTifFileList.add(srcTifFile1);
+	    		srcTifFileList.add(srcTifFile2);
+	    		destFileList.add(destFile1);
+	    		destFileList.add(destFile2);
+	    		exprList.add(expr);
+	    		exprList.add(expr);
 	    		
 	    		DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 				cells[0] = new StringCell(destFile1);
 				cells[1] = new StringCell(destFile2);
 				cells[2] = r.getCell(ovIndex);
-				container.addRowToTable(new DefaultRow("Row"+i, cells));
-				i++;
+				cellList.add(cells);
 				
 	    	}
 	    	
@@ -185,17 +178,14 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 	        	String destFile = outFolder+"/"+rankStr + ".tif";
 	        	String srcTifFile = srcPath.getStringValue().replace("\\", "/") + "/" + rankStr + ".tif";
 	        	
-	        	Utility.ClipRaster(overlapShapeFile, srcTifFile, destFile, 
-		    			overWrite.getBooleanValue(), tap.getBooleanValue(), 
-		    			xRes.getStringValue(), yRes.getStringValue(),
-		    			noDataValue.getStringValue(),
-		    			woName.getStringValue(),woValue.getStringValue(),expr);
+	        	srcTifFileList.add(srcTifFile);
+	        	destFileList.add(destFile);
+	        	exprList.add(expr);
 	        	
 	        	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 				cells[0] = new StringCell(destFile);
 				cells[1] = r.getCell(rnkIndex);
-				container.addRowToTable(new DefaultRow("Row"+i, cells));
-				i++;
+				cellList.add(cells);
 	    	}
 	    	else if (useOverlapOnly){
 	    		String ovidStr = r.getCell(ovIndex).toString();
@@ -206,17 +196,14 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 	        	StringCell inPathCell = (StringCell)r.getCell(loc);
 		    	String srcTifFile = inPathCell.getStringValue();
 	        	
-	        	Utility.ClipRaster(overlapShapeFile, srcTifFile, destFile, 
-		    			overWrite.getBooleanValue(), tap.getBooleanValue(), 
-		    			xRes.getStringValue(), yRes.getStringValue(),
-		    			noDataValue.getStringValue(),
-		    			woName.getStringValue(),woValue.getStringValue(),expr);
+		    	srcTifFileList.add(srcTifFile);
+	        	destFileList.add(destFile);
+	        	exprList.add(expr);
 	        	
 	        	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 				cells[0] = new StringCell(destFile);
 				cells[1] = r.getCell(ovIndex);
-				container.addRowToTable(new DefaultRow("Row"+i, cells));
-				i++;
+				cellList.add(cells);
 	    	}
 	    	else{
 	    		StringCell inPathCell = (StringCell)r.getCell(loc);
@@ -226,21 +213,30 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 	    		String outFolder = outpath.getStringValue().replace("\\", "/");
 	        	String destFile = outFolder+"/"+filenames[filenames.length-1];
 	        	
-		    	Utility.ClipRaster(overlapShapeFile, srcTifFile, destFile, 
-		    			overWrite.getBooleanValue(), tap.getBooleanValue(), 
-		    			xRes.getStringValue(), yRes.getStringValue(),
-		    			noDataValue.getStringValue(),
-		    			woName.getStringValue(),woValue.getStringValue(),cwhere.getStringValue());
-		    	
+	        	srcTifFileList.add(srcTifFile);
+	        	destFileList.add(destFile);
+	        	exprList.add(cwhere.getStringValue());
+	        	
 		    	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 				cells[0] = new StringCell(destFile);
-				container.addRowToTable(new DefaultRow("Row"+i, cells));   	
-				i++;
+				cellList.add(cells);
 	    	}
-	    	
 			exec.checkCanceled();
-			exec.setProgress((double) i / (double) s);    	
-	    	
+			//exec.setProgress((double) i / (double) s);    	
+		}
+		
+		Utility.ClipRaster(overlapShapeFile, srcTifFileList, destFileList, 
+    			overWrite.getBooleanValue(), tap.getBooleanValue(), 
+    			xRes.getStringValue(), yRes.getStringValue(),
+    			noDataValue.getStringValue(),
+    			woName.getStringValue(),woValue.getStringValue(),exprList, exec);
+		
+		int i = 1;
+		for (DataCell [] cells : cellList){
+			container.addRowToTable(new DefaultRow("Row"+i, cells));
+			exec.checkCanceled();
+			exec.setProgress(0.9 + (0.1 * ((double) i / (double) inTable.size())));	  
+			i++;
 		}
 		
 		container.close();

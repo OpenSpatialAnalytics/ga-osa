@@ -83,32 +83,40 @@ public class RasterizeNodeModel extends NodeModel {
 		FileUtils.cleanDirectory(new File(outPath.getStringValue())); 
 		
 		int locIndex = inTable.getSpec().findColumnIndex(Utility.LOC_COLUMN);
-		int index = 0;
+		List<String> inFileList = new ArrayList<String>();
+		List<DataCell []> cellList = new ArrayList<DataCell []>(); 
 		
 		for (DataRow r : inTable ){
 			
 			StringCell inPathCell = (StringCell)r.getCell(locIndex);
 	    	String inFile = inPathCell.getStringValue();
-	    	
-	    	String outFile = Utility.Rasterize(inFile, outPath.getStringValue(), 
-	    			xRes.getStringValue(), yRes.getStringValue(), 
-	    			burn.getStringValue(), attr.getStringValue(), 
-	    			noDataValue.getStringValue(), outputType.getStringValue(), 
-	    			outputFormat.getStringValue(), tap.getBooleanValue(), rc.getBooleanValue());
+	    	inFileList.add(inFile);
 	    	
 	    	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-	    	cells[locIndex] = new StringCell(outFile);
+	    	cells[locIndex] = new StringCell("");
 	    	for ( int col = 0; col < inTable.getSpec().getNumColumns(); col++ ) {	
 				if (col != locIndex) {
 					cells[col] = r.getCell(col);
 				}
     		}
-	    	
+	    	cellList.add(cells);
 	    	exec.checkCanceled();
+		}
+		
+		List<String> outFileList = Utility.Rasterize(inFileList, outPath.getStringValue(), 
+    			xRes.getStringValue(), yRes.getStringValue(), 
+    			burn.getStringValue(), attr.getStringValue(), 
+    			noDataValue.getStringValue(), outputType.getStringValue(), 
+    			outputFormat.getStringValue(), tap.getBooleanValue(), rc.getBooleanValue(), exec);
+		
+		int index = 1;
+		for (String outFile : outFileList){
+			DataCell[] cells = cellList.get(outFileList.indexOf(outFile));
+			cells[locIndex] = new StringCell(outFile);
 			container.addRowToTable(new DefaultRow("Row"+index, cells));
-			exec.setProgress((double) index / (double) inTable.size());
-			index++;    
-			
+			exec.checkCanceled();
+			exec.setProgress(0.9 + (0.1 * ((double) index / (double) inTable.size())));			
+			index++;	      
 		}
 
 		container.close();

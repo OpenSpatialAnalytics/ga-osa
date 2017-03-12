@@ -1,16 +1,10 @@
 package org.knime.geo.combine;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
-import org.knime.geo.resample.ReSampleMethod;
-import org.knime.geo.resample.ResampleNodeModel;
 import org.knime.geoutils.Constants;
 
 /**
@@ -29,7 +23,6 @@ public class CombineNodeDialog extends DefaultNodeSettingsPane {
     /**
      * New pane for configuring the Combine node.
      */
-	@SuppressWarnings("unchecked")
     protected CombineNodeDialog() {
     	
     	//ColumnSelectionComboxBox combo = new ColumnSelectionComboxBox("Group By");

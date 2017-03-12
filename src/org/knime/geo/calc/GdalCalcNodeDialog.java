@@ -6,7 +6,6 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.geo.mosaic.MosaicNodeModel;
 
 /**
  * <code>NodeDialog</code> for the "GdalCalc" Node.

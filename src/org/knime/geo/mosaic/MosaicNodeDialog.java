@@ -10,7 +10,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.geo.resample.OutputFormat;
-import org.knime.geo.resample.ResampleNodeModel;
 
 /**
  * <code>NodeDialog</code> for the "Mosaic" Node.

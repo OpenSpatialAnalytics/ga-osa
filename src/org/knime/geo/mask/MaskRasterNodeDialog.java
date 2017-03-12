@@ -4,12 +4,9 @@ import javax.swing.JFileChooser;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.geo.mosaic.MosaicNodeModel;
-import org.knime.geo.mosaic.OutputType;
-import org.knime.geo.resample.OutputFormat;
+
 
 /**
  * <code>NodeDialog</code> for the "MaskRaster" Node.

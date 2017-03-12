@@ -61,10 +61,10 @@ public class GdalCalcNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec();
 		BufferedDataContainer container = exec.createDataContainer(outSpec);
 		int numColumns = inTable.getSpec().getNumColumns();
-		
+		List<List<String>> sourceFileList = new ArrayList<List<String>>();
+		List<List<String>> varList = new ArrayList<List<String>>();
+		List<String> outFiles = new ArrayList<String>(); 
     	
-		int i = 0;	
-	
 		for (DataRow r : inTable){
 			List<String> sourceFiles = new ArrayList<String>(); 
 			List<String> varNames = new ArrayList<String>();
@@ -84,13 +84,21 @@ public class GdalCalcNodeModel extends NodeModel {
 		    	varNames.add(Character.toString (c));
 			}
 			String outFile = outPath.getStringValue().replace("\\", "/") + "/" + rank + ".tif";
-			Utility.GetGdalCalc(sourceFiles, varNames, outFile ,null, expr.getStringValue());
 			
+			sourceFileList.add(sourceFiles);
+			varList.add(varNames);
+			outFiles.add(outFile);
+		}
+		
+		Utility.GetGdalCalc(sourceFileList, varList, outFiles ,null, expr.getStringValue(), exec);
+		
+		int i = 1;	
+		for (String outFile : outFiles){
 			DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 			cells[0] = new StringCell(outFile);
 			container.addRowToTable(new DefaultRow("Row"+i, cells));	
 			exec.checkCanceled();
-			exec.setProgress((double) i / (double) inTable.size());  
+			exec.setProgress(0.9 + (0.1 * ((double) i / (double) inTable.size())));	  
 			i++;
 		}
 		

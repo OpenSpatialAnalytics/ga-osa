@@ -12,8 +12,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.node.NodeLogger;
-import org.knime.geo.reader.ShapeFileReaderNodeModel;
 import org.knime.core.data.def.*;
 import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.opengis.feature.Property;
@@ -27,9 +25,6 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
 public class ShapeToKnime {
-	
-	   private static final NodeLogger logger = NodeLogger
-	            .getLogger(ShapeToKnime.class);
 	
 	public static DataTableSpec[] createSpec(SimpleFeatureCollection collection)
 	{
@@ -122,18 +117,4 @@ public class ShapeToKnime {
 		
 		return cellList;
 	}
-	
-	/*
-	public static void main (String args[])
-	{
-		String elevband = "E:\\GA Project\\Simple Case Study\\Source Data\\reserves.shp";
-		SimpleFeatureCollection collection = ShapeFileFeatureExtractor.getShapeFeature(elevband);
-		
-		DataTableSpec spec = createSpec(collection)[0];
-		System.out.println("fdsfdsfs");
-		System.out.println(spec.getColumnSpec(1).getType().toString());
-		
-	}
-	*/
-
 }

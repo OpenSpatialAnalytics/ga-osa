@@ -11,22 +11,24 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext ;
 import org.knime.geo.resample.DirectoryFormat;
 import org.knime.geoutils.Constants;
 
@@ -271,522 +273,578 @@ public class Utility {
 		return rankedList;
 	}
 		
-	
-	/*
-	public static void ReadXML(String xmlFilePath)
-	{
-		  try {
-			  File file = new File(xmlFilePath);
-			  DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance()
-                      .newDocumentBuilder();
-			  Document doc = dBuilder.parse(file);
-			  doc.getDocumentElement().normalize();
-			  System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-			  NodeList nList = doc.getElementsByTagName("Esri");
-			  Node nNode = nList.item(0);
-			  Element eElement = (Element) nNode;
-			  System.out.println(eElement.getElementsByTagName("CreaDate").item(0).getTextContent());
-
-		  }
-		  catch (Exception e) {
-			  e.printStackTrace();
-			  System.out.println(e.getMessage());
-		  }
-	}
-	*/
-	
-	public static String ReSampleRaster(String inPath, String outDir, String directoryFormat,
-			String selectedColumn, String columnValueName, String columnValueNo,
+	public static List<String> ReSampleRaster(List<String> inPathList, String outDir, String directoryFormat,
+			String selectedColumn, List<String> columnValueNames, List<String> columnValueNos,
 			boolean overWrite, boolean tap,
 			String resample, String workingMemory, String oFormat, String s_srs, String t_srs,
-			String xRes, String yRes, boolean isRun, boolean isZip)
+			String xRes, String yRes, boolean isRun, boolean isZip, ExecutionContext exec)
 	{
-		inPath = inPath.replace("\\", "/");
+	
 		outDir = outDir.replace("\\", "/");
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(inPathList.size());
 		
-		List<String> commandList = new ArrayList<String>();
-		commandList.add("gdalwarp");
-		if (tap)
-			commandList.add("-tap");
-		if (overWrite)
-			commandList.add("-overwrite");
-		if(!s_srs.isEmpty()){
-			commandList.add("-s_srs");
-			commandList.add(s_srs);
-		}
-		if(!t_srs.isEmpty()){
-			commandList.add("-t_srs");
-			commandList.add(t_srs);
-		}
-		commandList.add("-r");
-		commandList.add(resample);
-		commandList.add("-wm");
-		commandList.add(workingMemory);
-		commandList.add("-of");
-		commandList.add(oFormat);
-		commandList.add("-tr");
-		commandList.add(xRes);
-		commandList.add(yRes);		
-		commandList.add(BuildInputPath(inPath,isZip));
-		
-		String outputSubFolder = "";
-		String outFileName = "";
-		String[] inPaths = inPath.split("/");
-		
-		if (directoryFormat.compareTo(DirectoryFormat.MainDir.toString())==0){
+		int index = 0;
+		List <String> outputFiles = new ArrayList<String>();
+	
+		for (String inPath: inPathList) {
+			List<String> commandList = new ArrayList<String>();
 			
-			outputSubFolder = outDir;
-			outFileName = inPaths[inPaths.length-1];  //take the source file name from input path
-		}
-		else if (directoryFormat.compareTo(DirectoryFormat.SubDir.toString())==0){
-			/*
-			String folderName = inPaths[inPaths.length-2];			
-			String parentFolder = inPaths[inPaths.length-3];
-			if ( parentFolder.contains(".zip") ){
-				parentFolder = parentFolder.substring(0, parentFolder.length()-5);			
+			inPath = inPath.replace("\\", "/");
+			commandList.add("gdalwarp");
+			if (tap)
+				commandList.add("-tap");
+			if (overWrite)
+				commandList.add("-overwrite");
+			if(!s_srs.isEmpty()){
+				commandList.add("-s_srs");
+				commandList.add(s_srs);
 			}
-			outputSubFolder = outDir+"/"+parentFolder;
-			outFileName = folderName + outputFormat;
-			*/
-			String parentFolder  = outDir+"/"+selectedColumn;  //column name as subdirectory
-			File directory = new File(parentFolder);
+			if(!t_srs.isEmpty()){
+				commandList.add("-t_srs");
+				commandList.add(t_srs);
+			}
+			commandList.add("-r");
+			commandList.add(resample);
+			commandList.add("-wm");
+			commandList.add(workingMemory);
+			commandList.add("-of");
+			commandList.add(oFormat);
+			commandList.add("-tr");
+			commandList.add(xRes);
+			commandList.add(yRes);		
+			commandList.add(BuildInputPath(inPath,isZip));
+		
+			String outputSubFolder = "";
+			String outFileName = "";
+			String[] inPaths = inPath.split("/");
+		
+			if (directoryFormat.compareTo(DirectoryFormat.MainDir.toString())==0){
+			
+				outputSubFolder = outDir;
+				outFileName = inPaths[inPaths.length-1];  //take the source file name from input path
+			}
+			else if (directoryFormat.compareTo(DirectoryFormat.SubDir.toString())==0){
+			
+				String parentFolder  = outDir+"/"+selectedColumn;  //column name as subdirectory
+				File directory = new File(parentFolder);
+				if (! directory.exists()){
+					directory.mkdir();
+				}
+				outputSubFolder = parentFolder + "/" + columnValueNames.get(index);
+				outFileName = columnValueNos.get(index) + outputFormat;
+			
+			}
+	
+			File directory = new File(outputSubFolder);
 			if (! directory.exists()){
 				directory.mkdir();
 			}
-			outputSubFolder = parentFolder + "/" + columnValueName;
-			outFileName = columnValueNo + outputFormat;
-			
-		}
-	
-		File directory = new File(outputSubFolder);
-		if (! directory.exists()){
-			directory.mkdir();
-		}
 				
-		String createdFile = outputSubFolder+"/"+outFileName;
-		commandList.add(pathBuilder(createdFile));
-				
+			String createdFile = outputSubFolder+"/"+outFileName;
+			commandList.add(pathBuilder(createdFile));
+			listOfCommands.add(commandList);
+			index++;
+			outputFiles.add(createdFile);
+		}
 		
+		/*
 		String outputStr = "";
-		
-		if (isRun)
-			outputStr = executeCommand(commandList);
-		else
-			outputStr = "commands";
-				
-		String outputStringFile = outputSubFolder +"/resample_log.txt";
-    	String outputCommandFile = outputSubFolder +"/commands.txt";
+			
+		String outputStringFile = outDir +"/resample_log.txt";
+    	String outputCommandFile = outDir +"/commands.";
     	
+    	if (isWindows())
+    		outputCommandFile += "bat";
+    	else
+    		outputCommandFile += "sh";
+    		
+    	
+    	commandList.add("\n");
+    	commandList.add("exit");
     	String command = toCommand(commandList); 
     	writeOutputCommand(outputCommandFile, command);
-    	writeOutputLog(outputStringFile, command, outputStr);
+   	
+    	if (isRun)
+			outputStr = executeBatch(outputCommandFile, exec);
+		else
+			outputStr = "commands";*/
+		
+		String outputCommandFile = outDir +"/commands.txt";
+		writeListCommand(outputCommandFile, listOfCommands);
+		
+		String outputStr = "";
+		if (isRun)
+			outputStr = executeListCommand(listOfCommands, exec);
+		else
+			outputStr = "commands";
+		
+		String outputStringFile = outDir +"/resample_log.txt";
+    	writeLog(outputStringFile, outputStr);
     	
-		return createdFile;	
+		return outputFiles;	
 	}
 	
 	
-	public static String MergeRasters(List<String> inList, String inPath, String mergedFile, 
-			String outputType, String noDataValue, String oFormat, boolean isRun)
+	public static List<String> MergeRasters(List<List<String>> allInList, List<String> allInPathList, List<String> allMergedFileList, 
+			String outputType, String noDataValue, String oFormat, boolean isRun, ExecutionContext exec)
 	{
-		mergedFile = mergedFile.replace("\\", "/");
+		int numList = 0;
 		String gdalPath = getGdalPath();
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(allMergedFileList.size());
+		List<List<String>>  listOfPrintCommands = new ArrayList<List<String>>();
+		List<String> executionPathList = new ArrayList<String>();
+		List<Boolean> largeSamples = new ArrayList<Boolean>();
+		List<String> newMergedFileList = new ArrayList<String>();
 		
-		List<String> commandList = new ArrayList<String>();
-		List<String> commandList1 = new ArrayList<String>();
+		for (String mergedFile : allMergedFileList) {
+		
+			String inPath = allInPathList.get(numList);
+			mergedFile = mergedFile.replace("\\", "/");
+			List<String> commandList = new ArrayList<String>();
+			List<String> commandList1 = new ArrayList<String>();
 
-		if (gdalPath.length() != 0)
-			commandList.add("python");
-		commandList.add(pathBuilder(gdalPath+"gdal_merge.py"));
-		commandList.add("-ot");
-		commandList.add(outputType);
-		//commandList.add("-n");
-		//commandList.add(noDataValue);
-		commandList.add("-a_nodata");
-		commandList.add(noDataValue);
-		commandList.add("-o");
+			if (gdalPath.length() != 0)
+				commandList.add("python");
+			commandList.add(pathBuilder(gdalPath+"gdal_merge.py"));
+			commandList.add("-ot");
+			commandList.add(outputType);
+			commandList.add("-a_nodata");
+			commandList.add(noDataValue);
+			commandList.add("-o");
 		
-		if(!mergedFile.endsWith(".tif"))
-			mergedFile = mergedFile + ".tif";
+			if(!mergedFile.endsWith(".tif"))
+				mergedFile = mergedFile + ".tif";
+			
+			newMergedFileList.add(mergedFile);
 		
-		commandList.add(pathBuilder(mergedFile));
-		commandList.add("-of");
-		commandList.add(oFormat);
-		commandList.add("-co");
-		commandList.add("SPARSE_OK=TRUE");
+			commandList.add(pathBuilder(mergedFile));
+			commandList.add("-of");
+			commandList.add(oFormat);
+			commandList.add("-co");
+			commandList.add("SPARSE_OK=TRUE");
+	
+			boolean isLargeResamples = false;
+			List<String> inList = allInList.get(numList);
 		
+			if ( inList.size() > 1500 )
+				isLargeResamples = true;
 		
-		/*
-		String inSourcePath = inList.get(0);
-		inSourcePath = inSourcePath.replace("\\", "/");
-		String inPath = inSourcePath.substring(0,inSourcePath.lastIndexOf("/"));
-		*/
+			if(!isLargeResamples){
+				for (int i = 0; i < inList.size(); i++ ){
+					commandList.add(inList.get(i));
+				}
+				largeSamples.add(new Boolean(false));
+			}
+			
+			else{
+				largeSamples.add(new Boolean(true));
+				commandList1.addAll(commandList.subList(0, commandList.size()));
+				File folder = new File(inPath+"temp");
+				if (! folder.exists()){
+					folder.mkdir();
+				}
+			
+				for (int i = 0; i < inList.size(); i++ ){
+				
+					String inFile = inList.get(i);
+					File oldFile = new File(inPath+"/"+inFile);
+					String fName = inFile.substring(0,inFile.indexOf(outputFormat));
+					File newFile = new File(folder+"/"+fName);
+					try{		
+						FileUtils.copyFile(oldFile, newFile); 
+						commandList.add(fName);
+						commandList1.add(inFile);
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace();
+					}
+				}
+			}
 		
-		boolean isLargeResamples = false;
-		
-		if ( inList.size() > 1500 )
-			isLargeResamples = true;
-		
-		if(!isLargeResamples){
-			for (int i = 0; i < inList.size(); i++ ){
-				//String inFile = inList.get(i).replace("\\", "/");
-				//String[] inPaths = inFile.split("/");
-				//String inSourceFile = inPaths[inPaths.length-1];
-				//commandList.add(inSourceFile);
-				commandList.add(inList.get(i));
+			String executionPath = inPath;
+			if (isLargeResamples)
+				executionPath = inPath+"temp";
+			
+			listOfCommands.add(commandList);
+			executionPathList.add(executionPath);
+			
+			
+			if(isLargeResamples)
+				listOfPrintCommands.add(commandList1);
+			else
+				listOfPrintCommands.add(commandList);
+				
+			numList++;
+			
+			try {
+				exec.checkCanceled();
+				exec.setProgress(0.1 * (numList/allMergedFileList.size()));
+			} catch (CanceledExecutionException e) {
+				e.printStackTrace();
 			}
 		}
-		else{
-			commandList1.addAll(commandList.subList(0, commandList.size()));
-			
-			File folder = new File(inPath+"temp");
-			if (! folder.exists()){
-				folder.mkdir();
-			}
-			
-			for (int i = 0; i < inList.size(); i++ ){
-				//String inFile = inList.get(i).replace("\\", "/");
-				String inFile = inList.get(i);
-				File oldFile = new File(inPath+"/"+inFile);
-				String fName = inFile.substring(0,inFile.indexOf(outputFormat));
-				File newFile = new File(folder+"/"+fName);
+		
+		String mergedFile1 = newMergedFileList.get(0);
+		String folderLoc = mergedFile1.substring(0, mergedFile1.lastIndexOf("/"));
+		String outputCommandFile = folderLoc +"/merge.txt";
+		writeListCommand(outputCommandFile,listOfPrintCommands);
+	
+		String outputStr = "";
+		if (isRun)
+			outputStr = executeMergeCommand(listOfCommands,executionPathList,exec);
+		else
+			outputStr = "Error";
+		
+		String outputStringFile = folderLoc +"/merge_log.txt";
+		writeLog(outputStringFile, outputStr);
+		
+		int k = 0;
+		for (Boolean b : largeSamples){
+			boolean isLargeResamples = b.booleanValue();
+			if(isLargeResamples){
+				String inPath = allInPathList.get(k);
 				try{
-					//oldFile.renameTo(newfile);					
-					FileUtils.copyFile(oldFile, newFile); 
-					commandList.add(fName);
-					commandList1.add(inFile);
+					FileUtils.cleanDirectory(new File(inPath+"temp"));
+					FileUtils.deleteDirectory(new File(inPath+"temp"));
 				}
 				catch (Exception e)
 				{
-					e.printStackTrace();
+					
 				}
 			}
-		}
-		
-		String outputStr = "";
-		String executionPath = inPath;
-		if (isLargeResamples)
-			executionPath = inPath+"temp";
-		
-		if (isRun)
-			outputStr = executeMergeCommand(commandList,executionPath);
-		else
-			outputStr = "commands";
-				
-		String folderLoc = mergedFile.substring(0, mergedFile.lastIndexOf("/"));
-		
-		String outputCommandFile = folderLoc +"/merge.txt";
-		String outputStringFile = folderLoc +"/merge_log.txt";
-				
-		
-		String command = toCommand(commandList);
-		if(isLargeResamples)
-			command = toCommand(commandList1);
-		
-		writeOutputCommand(outputCommandFile,command);
-		writeOutputLog(outputStringFile, command, outputStr);
-		
-		if(isLargeResamples){
-			try{
-				FileUtils.cleanDirectory(new File(inPath+"temp"));
-				FileUtils.deleteDirectory(new File(inPath+"temp"));
-			}
-			catch (Exception e)
-			{
-				
-			}
-			
+			k++;
 		}		
 		
-		return mergedFile;		
+		return newMergedFileList;		
 	}
 	
 	
-	public static String GetGdalCalc(List<String> sourceFiles, List<String> varNames, 
-			String destFile,  String type, String expression)
+	public static List<String> GetGdalCalc(List<List<String>> sourceFileList, List<List<String>> varNameList, 
+			List<String> destFiles,  String type, String expression, ExecutionContext exec)
 	{
-		
-		destFile = destFile.replace("\\", "/");
+	
 		String gdalPath = getGdalPath();
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(sourceFileList.size());
+		List<String> newDestFiles = new ArrayList<String>();
 		
-		List<String> commandList = new ArrayList<String>();
-		if (gdalPath.length() != 0)
-			commandList.add("python");
-		commandList.add(pathBuilder(gdalPath+"gdal_calc.py"));
-				 
-		for (int i=0; i< sourceFiles.size(); i++ ){			
-			commandList.add("-"+varNames.get(i));		
-			String sourceFile = sourceFiles.get(i);
-			sourceFile = sourceFile.replace("\\", "/");
-			commandList.add(pathBuilder(sourceFile));
+		for(int index = 0; index < sourceFileList.size(); index++ ) {
+		
+			List<String> sourceFiles = sourceFileList.get(index);
+			List<String> varNames = varNameList.get(index);
+			String destFile = destFiles.get(index);
+			
+			destFile = destFile.replace("\\", "/");
+			
+			List<String> commandList = new ArrayList<String>();
+			if (gdalPath.length() != 0)
+				commandList.add("python");
+			commandList.add(pathBuilder(gdalPath+"gdal_calc.py"));
+					 
+			for (int i=0; i< sourceFiles.size(); i++ ){			
+				commandList.add("-"+varNames.get(i));		
+				String sourceFile = sourceFiles.get(i);
+				sourceFile = sourceFile.replace("\\", "/");
+				commandList.add(pathBuilder(sourceFile));
+			}
+		
+			if(!destFile.endsWith(outputFormat))
+				destFile = destFile + outputFormat;
+			
+			newDestFiles.add(destFile);
+		
+			commandList.add("--outfile="+pathBuilder(destFile));
+			//commandList.add("--type=Byte");
+			if ( type != null )
+				commandList.add("--type="+type);
+			
+			commandList.add("--calc="+pathBuilder(expression));
+			//commandList.add("--NoDataValue="+noDataVlue);
+			commandList.add("--overwrite");	
+			
+			listOfCommands.add(commandList);
 		}
 		
-		if(!destFile.endsWith(outputFormat))
-			destFile = destFile + outputFormat;
-		
-		commandList.add("--outfile="+pathBuilder(destFile));
-		//commandList.add("--type=Byte");
-		if ( type != null )
-			commandList.add("--type="+type);
-		
-		commandList.add("--calc="+pathBuilder(expression));
-		//commandList.add("--NoDataValue="+noDataVlue);
-		commandList.add("--overwrite");	
-		
-		String folderLoc = destFile.substring(0, destFile.lastIndexOf("/"));
-		
-		String outputStr = executeCommand(commandList);
-				
+		String folderLoc = newDestFiles.get(0).substring(0, newDestFiles.get(0).lastIndexOf("/"));		
 		String outputCommandFile = folderLoc +"/calc.txt";
 		String outputLogFile = folderLoc +"/calc_log.txt";
 		
+		writeListCommand(outputCommandFile,listOfCommands);
+		String outputStr = executeListCommand(listOfCommands, exec);
+		writeLog(outputLogFile, outputStr);
 		
-		String command = toCommand(commandList);
-		writeOutputCommand(outputCommandFile,command);
-		writeOutputLog(outputLogFile, command, outputStr);
-		
-		return destFile;				
+		return newDestFiles;				
 	}
 	
 	
-	public static String MaskRaster(String sourceFile, String outPath, String type, String noDataVlue)
+	public static List<String> MaskRaster(List<String> sourceFileList, String outPath, String type, String noDataVlue, ExecutionContext exec)
 	{
 		
 		outPath = outPath.replace("\\", "/");
 		String gdalPath = getGdalPath();
+		List<String> outFiles = new ArrayList<String>();
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(sourceFileList.size());
+		List<String> destFiles = new ArrayList<String>();
 		
-		List<String> commandList = new ArrayList<String>();
-		if (gdalPath.length() != 0)
-			commandList.add("python");
-		commandList.add(pathBuilder(gdalPath+"gdal_calc.py"));	
 		
-		commandList.add("-A");
-		sourceFile = sourceFile.replace("\\", "/");
-		commandList.add(pathBuilder(sourceFile));
+		for(String sourceFile :  sourceFileList) {
+			
+			List<String> commandList = new ArrayList<String>();
+			if (gdalPath.length() != 0)
+				commandList.add("python");
+			commandList.add(pathBuilder(gdalPath+"gdal_calc.py"));	
+			
+			commandList.add("-A");
+			sourceFile = sourceFile.replace("\\", "/");
+			commandList.add(pathBuilder(sourceFile));
 		
-		String[] inPaths = sourceFile.split("/");
-		String inFileName = inPaths[inPaths.length-1];
-    	String outFile = outPath + "/" + inFileName;       	    	
-    	String rank = inFileName.substring(0, inFileName.indexOf(".tif"));
+			String[] inPaths = sourceFile.split("/");
+			String inFileName = inPaths[inPaths.length-1];
+	    	String outFile = outPath + "/" + inFileName;       	    	
+	    	String rank = inFileName.substring(0, inFileName.indexOf(".tif"));
     	
-    	String expression = "(A>-1000)*"+rank;				
-		commandList.add("--outfile="+pathBuilder(outFile));		
-		commandList.add("--type="+type);
-		commandList.add("--calc="+pathBuilder(expression));
-		commandList.add("--NoDataValue="+noDataVlue);
-		commandList.add("--overwrite");	
+	    	String expression = "(A>-1000)*"+rank;				
+			commandList.add("--outfile="+pathBuilder(outFile));		
+			commandList.add("--type="+type);
+			commandList.add("--calc="+pathBuilder(expression));
+			commandList.add("--NoDataValue="+noDataVlue);
+			commandList.add("--overwrite");	
+			
+			listOfCommands.add(commandList);
+			outFiles.add(outFile);
+			
+			String destFile = outPath + "/" + rank + shapeFormat;
+			destFiles.add(destFile);
+		}
 		
-		
-		String outputStr = executeCommand(commandList);				
 		String outputCommandFile = outPath +"/mask.txt";
+		writeListCommand(outputCommandFile,listOfCommands);
+		
+		String outputStr = executeListCommand(listOfCommands, exec);
 		String outputLogFile = outPath +"/mask_log.txt";
+		writeLog(outputLogFile, outputStr);
 		
-		String destFile = outPath + "/" + rank + shapeFormat;
+		GetGdalPolygonize(outFiles,destFiles,"ESRI Shapefile", exec);
 		
-		
-		String command = toCommand(commandList);
-		writeOutputCommand(outputCommandFile,command);
-		writeOutputLog(outputLogFile, command, outputStr);
-		
-		GetGdalPolygonize(outFile,destFile,"ESRI Shapefile");
-		//outputStr = executeCommand(command);	
-		//writeOutputCommand(outputStringFile,command,outputStr);
-		
-		return destFile;				
+		return destFiles;				
 	}
 	
 	
-	public static String GetGdalPolygonize(String sourceFile, String destFile, String format)
+	public static void GetGdalPolygonize(List<String> sourceFiles, List<String> destFiles, String format, ExecutionContext exec)
 	{
-		sourceFile = sourceFile.replace("\\", "/");
-		destFile = destFile.replace("\\", "/");
 		String gdalPath = getGdalPath();
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(sourceFiles.size());
 		
-		List<String> commandList = new ArrayList<String>();
-		if (gdalPath.length() != 0)
-			commandList.add("python");
-		commandList.add(pathBuilder(gdalPath+"gdal_polygonize.py"));
-		commandList.add(pathBuilder(sourceFile));
-		commandList.add("-f");
-		commandList.add(pathBuilder(format));
+		for(int i = 0; i < sourceFiles.size(); i++ ) {
+			String sourceFile = sourceFiles.get(i);
+			String destFile = destFiles.get(i);
+			sourceFile = sourceFile.replace("\\", "/");
+			destFile = destFile.replace("\\", "/");
 		
-		if(!destFile.endsWith(".shp"))
-			destFile = destFile + ".shp";
+			List<String> commandList = new ArrayList<String>();
+			if (gdalPath.length() != 0)
+				commandList.add("python");
+			commandList.add(pathBuilder(gdalPath+"gdal_polygonize.py"));
+			commandList.add(pathBuilder(sourceFile));
+			commandList.add("-f");
+			commandList.add(pathBuilder(format));
+			
+			if(!destFile.endsWith(".shp"))
+				destFile = destFile + ".shp";
+			
+			commandList.add(pathBuilder(destFile));
+			commandList.add("fieldname");
+			commandList.add(Constants.RANK);
+			
+			listOfCommands.add(commandList);
+		}
 		
-		commandList.add(pathBuilder(destFile));
-		commandList.add("fieldname");
-		commandList.add(Constants.RANK);
-		
-
-		String outputStr = executeCommand(commandList);
-		
-		String folderLoc = destFile.substring(0, destFile.lastIndexOf("/"));
+		String folderLoc = destFiles.get(0).substring(0, destFiles.get(0).lastIndexOf("/"));
 		String outputCommandFile = folderLoc +"/polygolize.txt";
+		writeListCommand(outputCommandFile,listOfCommands);
+		
+		String outputStr = executeListCommand(listOfCommands, exec);
 		String outputLogFile = folderLoc +"/polygolize_log.txt";
 		
-
-		String command = toCommand(commandList);
-		writeOutputCommand(outputCommandFile,command);
-		writeOutputLog(outputLogFile, command, outputStr);
-		
-		return destFile;						
+		writeLog(outputLogFile, outputStr);
+				
 	}
 	
-	public static String ClipRaster(String srcClipFile, String srcTifFile, String destTifFile, 
+	public static List<String> ClipRaster(String srcClipFile, List<String> srcTifFiles, List<String> destTifFiles, 
 			boolean overWrite, boolean tap, String xRes, String yRes, String nData, String woName, String woValue,
-			String cWhere)
+			List<String> exprList, ExecutionContext exec)
 	{
 		
-		srcClipFile = srcClipFile.replace("\\", "/");
-		srcTifFile = srcTifFile.replace("\\", "/");
-		destTifFile = destTifFile.replace("\\", "/");
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(srcTifFiles.size());
 		
-		List<String> commandList = new ArrayList<String>();
-		commandList.add("gdalwarp");
-		if(!woName.isEmpty() && !woValue.isEmpty()){
-			commandList.add("-wo");
-			commandList.add(pathBuilder(woName+"="+woValue));
+		srcClipFile = srcClipFile.replace("\\", "/");
+		
+		for(int i = 0; i < srcTifFiles.size(); i++ ) {
+			
+			String srcTifFile = srcTifFiles.get(i);
+			String destTifFile = destTifFiles.get(i);
+			String cWhere = exprList.get(i);
+		
+			srcTifFile = srcTifFile.replace("\\", "/");
+			destTifFile = destTifFile.replace("\\", "/");
+		
+			List<String> commandList = new ArrayList<String>();
+			commandList.add("gdalwarp");
+			if(!woName.isEmpty() && !woValue.isEmpty()){
+				commandList.add("-wo");
+				commandList.add(pathBuilder(woName+"="+woValue));
+			}
+			if (tap)
+				commandList.add("-tap");
+			if (overWrite)
+				commandList.add("-overwrite");
+			if( !xRes.isEmpty() && !yRes.isEmpty() ){
+				commandList.add("-tr");
+				commandList.add(xRes);
+				commandList.add(yRes);
+			}
+			if (!nData.isEmpty()) {
+				commandList.add("-dstnodata");
+				commandList.add(nData);
+			}
+			commandList.add("-cutline");
+			commandList.add(pathBuilder(srcClipFile));
+			if (!cWhere.isEmpty()) {
+				commandList.add("-cwhere");
+				String[] cutlineFeatures = cWhere.split("=");
+				String name = cutlineFeatures[0].trim();
+				int value = Integer.parseInt(cutlineFeatures[1].trim());
+				commandList.add("\""+name+" = "+value+"\"");
+			}
+			commandList.add("-crop_to_cutline");
+			commandList.add(pathBuilder(srcTifFile));
+			commandList.add(pathBuilder(destTifFile));
+			
+			listOfCommands.add(commandList);
 		}
-		if (tap)
-			commandList.add("-tap");
-		if (overWrite)
-			commandList.add("-overwrite");
-		if( !xRes.isEmpty() && !yRes.isEmpty() ){
+		
+		String folderLoc = destTifFiles.get(0).substring(0, destTifFiles.get(0).lastIndexOf("/"));
+		String outputCommandFile = folderLoc +"/ClipRaster.txt";
+    	String outputLogFile = folderLoc +"/ClipRaster_log.txt";
+		
+    	writeListCommand(outputCommandFile,listOfCommands);
+		String outputStr = executeListCommand(listOfCommands, exec);
+    	writeLog(outputLogFile, outputStr);
+    	    	
+		return destTifFiles;	
+		
+	}
+	
+	public static List<String> Rasterize(List<String> srcShpFiles, String outFileLoc,  String xRes, String yRes,
+			String burn, String attr, String noDataValue, String outputType, String oFormat,  
+			boolean tap, boolean isRun, ExecutionContext exec)
+	{
+		outFileLoc = outFileLoc.replace("\\", "/");
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(srcShpFiles.size());
+		List<String> outFiles = new ArrayList<String>();
+		
+		for (String srcShpFile : srcShpFiles) {
+		
+			srcShpFile = srcShpFile.replace("\\", "/");
+			String[] inPaths = srcShpFile.split("/");
+			String inFileName = inPaths[inPaths.length-1];
+			String fileName = inFileName.substring(0, inFileName.length()-4) + outputFormat;
+			String outFile = outFileLoc + "/" + fileName;
+			outFiles.add(outFile);
+		
+			List<String> commandList = new ArrayList<String>();
+			commandList.add("gdal_rasterize");
+			if (!burn.isEmpty()) {
+				commandList.add("-a");
+				commandList.add(attr);
+			}
+			if (!attr.isEmpty()) {
+				commandList.add("-burn");
+				commandList.add(burn);
+			}
+			commandList.add("-of");
+			commandList.add(oFormat);
+			commandList.add("-a_nodata");
+			commandList.add(noDataValue);
 			commandList.add("-tr");
 			commandList.add(xRes);
 			commandList.add(yRes);
+			if (tap)
+				commandList.add("-tap");
+			commandList.add("-ot");
+			commandList.add(outputType);
+			commandList.add(pathBuilder(srcShpFile));
+			commandList.add(pathBuilder(outFile));
+			listOfCommands.add(commandList);
 		}
-		if (!nData.isEmpty()) {
-			commandList.add("-dstnodata");
-			commandList.add(nData);
-		}
-		commandList.add("-cutline");
-		commandList.add(pathBuilder(srcClipFile));
-		if (!cWhere.isEmpty()) {
-			commandList.add("-cwhere");
-			String[] cutlineFeatures = cWhere.split("=");
-			String name = cutlineFeatures[0].trim();
-			int value = Integer.parseInt(cutlineFeatures[1].trim());
-			commandList.add("\""+name+" = "+value+"\"");
-		}
-		commandList.add("-crop_to_cutline");
-		commandList.add(pathBuilder(srcTifFile));
-		commandList.add(pathBuilder(destTifFile));
 		
-		String command = toCommand(commandList);		
-		String outputStr = executeCommand(commandList);
-		    	    	
-    	String folderLoc = destTifFile.substring(0, destTifFile.lastIndexOf("/"));
-    	
-    	String outputCommandFile = folderLoc +"/ClipRaster.txt";
-    	String outputLogFile = folderLoc +"/ClipRaster_log.txt";
-    	    	
-    	writeOutputCommand(outputCommandFile,toCommand(commandList));
-    	writeOutputLog(outputLogFile, command, outputStr);
-    	    	
-		return destTifFile;	
-		
-	}
-	
-	public static String Rasterize(String srcShpFile, String outFileLoc,  String xRes, String yRes,
-			String burn, String attr, String noDataValue, String outputType, String oFormat,  
-			boolean tap, boolean isRun)
-	{
-		
-		srcShpFile = srcShpFile.replace("\\", "/");
-		outFileLoc = outFileLoc.replace("\\", "/");
-		String[] inPaths = srcShpFile.split("/");
-		String inFileName = inPaths[inPaths.length-1];
-		//String[] file = inFileName.split(".");
-		String fileName = inFileName.substring(0, inFileName.length()-4) + outputFormat;
-		String outFile = outFileLoc + "/" + fileName;
-		
-		List<String> commandList = new ArrayList<String>();
-		commandList.add("gdal_rasterize");
-		if (!burn.isEmpty()) {
-			commandList.add("-a");
-			commandList.add(attr);
-		}
-		if (!attr.isEmpty()) {
-			commandList.add("-burn");
-			commandList.add(burn);
-		}
-		commandList.add("-of");
-		commandList.add(oFormat);
-		commandList.add("-a_nodata");
-		commandList.add(noDataValue);
-		commandList.add("-tr");
-		commandList.add(xRes);
-		commandList.add(yRes);
-		if (tap)
-			commandList.add("-tap");
-		commandList.add("-ot");
-		commandList.add(outputType);
-		commandList.add(pathBuilder(srcShpFile));
-		commandList.add(pathBuilder(outFile));
-		
-		String outputStr = "";
-		
-		if (isRun)
-			outputStr = executeCommand(commandList);
-		else
-			outputStr = "commands";
-				
 		String outputStringFile = outFileLoc +"/rasterize_log.txt";
     	String outputCommandFile = outFileLoc +"/commands.txt";
     	
-    	String command = toCommand(commandList); 
-    	writeOutputCommand(outputCommandFile, command);
-    	writeOutputLog(outputStringFile, command, outputStr);
+		writeListCommand(outputCommandFile, listOfCommands);
+		
+		String outputStr = "";
+		if (isRun)
+			outputStr = executeListCommand(listOfCommands,exec);
+		else
+			outputStr = "commands";
+			
+    	writeLog(outputStringFile, outputStr);
     	
-		return outFile;	
+		return outFiles;	
 		
 	}
 	
 	
-	public static String Proximity(String srcRaster, String outFileLoc, 
+	public static List<String> Proximity(List<String> srcRasterList, String outFileLoc, 
 			String noDataValue, String outputType, String oFormat, String distUnit, 
-			boolean isRun)
+			boolean isRun, ExecutionContext exec)
 	{
-		srcRaster = srcRaster.replace("\\", "/");
 		outFileLoc = outFileLoc.replace("\\", "/");
-		String[] inPaths = srcRaster.split("/");
-		String inFileName = inPaths[inPaths.length-1];
-		//String[] file = inFileName.split(".");
-		String fileName = inFileName.substring(0, inFileName.length()-4) + "_proximity" + outputFormat;
-		String outFile = outFileLoc + "/" + fileName;
 		String gdalPath = getGdalPath();
+		List<List<String>>  listOfCommands = new ArrayList<List<String>>(srcRasterList.size());
+		List<String> outFiles = new ArrayList<String>();
 		
-		List<String> commandList = new ArrayList<String>();
-		if (gdalPath.length() != 0)
-			commandList.add("python");
-		commandList.add(pathBuilder(gdalPath+"gdal_proximity.py"));	
-		commandList.add(pathBuilder(srcRaster));
-		commandList.add(pathBuilder(outFile));
-		commandList.add("-of");
-		commandList.add(oFormat);
-		commandList.add("-ot");
-		commandList.add(outputType);
-		commandList.add("-distunits");
-		commandList.add(distUnit);
-		commandList.add("-nodata");
-		commandList.add(noDataValue);
-	
+		for (String srcRaster : srcRasterList) {
+		
+			srcRaster = srcRaster.replace("\\", "/");
+			String[] inPaths = srcRaster.split("/");
+			String inFileName = inPaths[inPaths.length-1];
+			String fileName = inFileName.substring(0, inFileName.length()-4) + "_proximity" + outputFormat;
+			String outFile = outFileLoc + "/" + fileName;
+			outFiles.add(outFile);
+		
+			List<String> commandList = new ArrayList<String>();
+			if (gdalPath.length() != 0)
+				commandList.add("python");
+			commandList.add(pathBuilder(gdalPath+"gdal_proximity.py"));	
+			commandList.add(pathBuilder(srcRaster));
+			commandList.add(pathBuilder(outFile));
+			commandList.add("-of");
+			commandList.add(oFormat);
+			commandList.add("-ot");
+			commandList.add(outputType);
+			commandList.add("-distunits");
+			commandList.add(distUnit);
+			commandList.add("-nodata");
+			commandList.add(noDataValue);
+			
+			listOfCommands.add(commandList);
+		}
+		
+		String outputCommandFile = outFileLoc +"/commands.txt";
+		String outputStringFile = outFileLoc +"/proximity_log.txt";
+		writeListCommand(outputCommandFile, listOfCommands);
+			
+			
 		String outputStr = "";
-		
 		if (isRun)
-			outputStr = executeCommand(commandList);
+			outputStr = executeListCommand(listOfCommands,exec);
 		else
 			outputStr = "commands";
-				
-		String outputStringFile = outFileLoc +"/proximity_log.txt";
-    	String outputCommandFile = outFileLoc +"/commands.txt";
-    	
-    	String command = toCommand(commandList); 
-    	writeOutputCommand(outputCommandFile, command);
-    	writeOutputLog(outputStringFile, command, outputStr);
-    	
-		return outFile;	
-		
+			
+    	writeLog(outputStringFile, outputStr);
+		return outFiles;	
 	}
 	
 	
@@ -878,6 +936,154 @@ public class Utility {
 		return StringUtils.join(commands," ");	
 	}
 	
+	private static String executeBatch(String batchFileName, ExecutionContext exec) {
+		
+		String os = System.getProperty("os.name");
+		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
+		
+		File f;
+		
+		if ( os.startsWith("Windows") ){
+			f = new File("C:/");
+		}
+		else{
+			f = new File("/");
+			try {				
+				Process p1 = null;
+				p1 = Runtime.getRuntime().exec(importPath);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		StringBuffer output = new StringBuffer();
+
+		Process p = null;
+		ProcessBuilder pb = null;
+		try {
+			if (isWindows())
+				pb = new ProcessBuilder(new String[]{"cmd", "/c", "start /B", batchFileName});
+			else
+				pb = new ProcessBuilder(new String[]{"bin/sh", "-c" ,batchFileName});
+				
+			pb.directory(f);
+			p = pb.start();
+			exec.checkCanceled();
+			int code = p.waitFor();
+			if (code == 0){
+				BufferedReader reader =
+	                            new BufferedReader(new InputStreamReader(p.getInputStream()));
+	
+	                        String line = "";
+				while ((line = reader.readLine())!= null) {
+					output.append(line + "\n");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return output.toString();
+	}
+	
+	private static String executeListCommand(List<List<String>> listOfCommands, ExecutionContext exec)  {
+		
+		String os = System.getProperty("os.name");
+		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
+		
+		File f;
+		
+		if ( os.startsWith("Windows") ){
+			f = new File("C:/");
+		}
+		else{
+			f = new File("/");
+			try {				
+				Process p1 = Runtime.getRuntime().exec(importPath);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		StringBuffer finalOutput = new StringBuffer();
+		
+		int threads = Runtime.getRuntime().availableProcessors();
+		ExecutorService service = Executors.newFixedThreadPool(threads);
+		
+		List<Future<String>> futures = new ArrayList<Future<String>>();
+		
+		for (List<String> commandList : listOfCommands) {
+				StringBuffer output = new StringBuffer();
+		        Callable<String> callable = new Callable<String>() {
+		            public String call() throws Exception {
+		                ProcessBuilder pb = new ProcessBuilder(commandList);
+		                pb.directory(f);
+		                try{
+		                	exec.checkCanceled();
+							Process p = pb.start();
+							int code = p.waitFor();
+							if (code == 0){
+								BufferedReader reader =
+					                            new BufferedReader(new InputStreamReader(p.getInputStream()));
+					
+					                        String line = "";
+								while ((line = reader.readLine())!= null) {
+									output.append(line + "\n");
+								}
+							}
+							exec.setProgress( 0.9 * ( (double) listOfCommands.indexOf(commandList) / (double) listOfCommands.size()));
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+		                return output.toString();
+		            }
+		        };
+		        futures.add(service.submit(callable));
+		  }
+
+		service.shutdown();
+		
+		boolean finished = false;
+		try {
+			finished = service.awaitTermination(24, TimeUnit.HOURS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		while(!finished);
+		 
+		for (Future<String> future : futures) {
+		      try {
+				finalOutput.append(future.get());
+			} 
+		    catch (Exception e) 
+		    {
+				e.printStackTrace();
+			}
+		}
+		 
+		return finalOutput.toString();
+		 
+		/*
+		ScheduledThreadPoolExecutor threadPool = new ScheduledThreadPoolExecutor(threads);
+		threadPool.scheduleAtFixedRate(new Runnable() {
+			
+			@Override
+			public void run() {
+				
+			}
+		}, 1, threads, TimeUnit.SECONDS);
+		*/
+		
+		//return output.toString();
+	}
+	
 	private static String executeCommand(List<String> commandList) {
 		
 		String os = System.getProperty("os.name");
@@ -929,7 +1135,7 @@ public class Utility {
 		return output.toString();
 	}
 	
-	private static String executeMergeCommand(List<String> commandList, String location) {
+	private static String executeMergeCommand(List<List<String>> listOfCommands, List<String> listOflocations, ExecutionContext exec) {
 		
 		String os = System.getProperty("os.name");
 		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
@@ -944,34 +1150,123 @@ public class Utility {
 			}
 		}
 		
-		File f = new File(location);
-		String[] commands = new String[commandList.size()];
-		commands = commandList.toArray(commands);
-
-		StringBuffer output = new StringBuffer();
-
-		Process p = null;
-		try {
-			ProcessBuilder pb = new ProcessBuilder(commands);
-			pb.directory(f);
-			p = pb.start();
-			//p = Runtime.getRuntime().exec(command,null,f);		
-			int code = p.waitFor();
-			if (code == 0){
-				BufferedReader reader =
-	                            new BufferedReader(new InputStreamReader(p.getInputStream()));
-	
-	                        String line = "";
-				while ((line = reader.readLine())!= null) {
-					output.append(line + "\n");
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
+		StringBuffer finalOutput = new StringBuffer();
+		
+		int threads = Runtime.getRuntime().availableProcessors();
+		ExecutorService service = Executors.newFixedThreadPool(threads);
+		
+		List<Future<String>> futures = new ArrayList<Future<String>>();
+		
+		for (List<String> commandList : listOfCommands) {
+			StringBuffer output = new StringBuffer();
+			
+	        Callable<String> callable = new Callable<String>() {
+	            public String call() throws Exception {
+	                ProcessBuilder pb = new ProcessBuilder(commandList);
+	                String location = listOflocations.get(listOfCommands.indexOf(commandList));
+	                File f = new File(location);
+	                pb.directory(f);
+	                try{
+	                	exec.checkCanceled();
+						Process p = pb.start();
+						int code = p.waitFor();
+						if (code == 0){
+							BufferedReader reader =
+				                            new BufferedReader(new InputStreamReader(p.getInputStream()));
+				
+				                        String line = "";
+							while ((line = reader.readLine())!= null) {
+								output.append(line + "\n");
+							}
+						}
+						exec.setProgress( 0.9 * ( (double) listOfCommands.indexOf(commandList) / (double) listOfCommands.size()));
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+	                return output.toString();
+	            }
+	        };
+	        futures.add(service.submit(callable));
 		}
 
-		return output.toString();
+		service.shutdown();
+	
+		boolean finished = false;
+		try {
+			finished = service.awaitTermination(24, TimeUnit.HOURS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	
+		while(!finished);
+		 
+		for (Future<String> future : futures) {
+		      try {
+				finalOutput.append(future.get());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return finalOutput.toString();
+	}
+	
+	private static void writeListCommand(String fileName, List<List<String>> listOfCommands)
+	{
+		BufferedWriter bw = null;
+		
+		String os = System.getProperty("os.name");
+		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
+		
+        try {          	
+           bw = new BufferedWriter(new FileWriter(fileName, true));
+           if ( !os.startsWith("Windows") ){
+        	   BufferedReader br = new BufferedReader(new FileReader(fileName));
+        	   String text = br.readLine();
+        	   br.close();
+        	   if ( text == null ) {        	   
+        		   bw.write(importPath);
+        	   	   bw.newLine();
+        	   }        	  
+   		   }
+           for (List<String> commandList : listOfCommands ){
+        	   	bw.write(toCommand(commandList));
+           		bw.newLine();        
+           }
+           bw.flush();
+        }
+        catch (IOException ioe) {
+        	ioe.printStackTrace();
+        } 
+        finally {
+	        if (bw != null) try {
+	        	bw.close();
+	        } 
+	        catch (IOException ioe2) {}
+	    } 		
+	}
+	
+	private static void writeLog(String fileName, String outputStr)
+	{
+		BufferedWriter bw = null;
+		 		
+        try {          	
+           bw = new BufferedWriter(new FileWriter(fileName, true));                      
+           bw.write(outputStr);
+           bw.newLine();                      
+           bw.flush();
+        }
+        catch (IOException ioe) {
+        	ioe.printStackTrace();
+        } 
+        finally {
+	        if (bw != null) try {
+	        	bw.close();
+	        } 
+	        catch (IOException ioe2) {}
+	    } 		
+		
 	}
 	
 	private static void writeOutputCommand(String fileName, String command)
@@ -1085,6 +1380,15 @@ public class Utility {
 		return inPath+"/"+mergedFileName;
 					
 	}	
+	
+	private static boolean isWindows()
+	{
+		String os = System.getProperty("os.name");
+		if ( os.startsWith("Windows") )
+			return true;
+		else
+			return false;
+	}
 	
 	/*
 	public static void main (String args[]) throws IOException

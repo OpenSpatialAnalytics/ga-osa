@@ -3,38 +3,17 @@ package org.knime.geo.reader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
-import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.geojson.geom.GeometryJSON;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.geoutils.ShapeFileFeatureExtractor;
 import org.knime.geoutils.ShapeToKnime;
-import org.opengis.feature.Property;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.AttributeType;
-
-import com.vividsolutions.jts.geom.Geometry;
-
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -53,21 +32,15 @@ import org.knime.core.node.NodeSettingsWO;
 public class ShapeFileReaderNodeModel extends NodeModel {
     
     // the logger instance
-    private static final NodeLogger logger = NodeLogger
-            .getLogger(ShapeFileReaderNodeModel.class);
-        
+    private static final NodeLogger logger = NodeLogger.getLogger(ShapeFileReaderNodeModel.class);
+       
     static final String CFG_SHP_FILE = "ShpFile";
-    public final SettingsModelString shpFile =
-	        new SettingsModelString(CFG_SHP_FILE,"");
-
-    
+    public final SettingsModelString shpFile = new SettingsModelString(CFG_SHP_FILE,"");
 
     /**
      * Constructor for the node model.
      */
     protected ShapeFileReaderNodeModel() {
-    
-        // TODO one incoming port and one outgoing port is assumed
         super(0, 1);
     }
 
@@ -78,13 +51,8 @@ public class ShapeFileReaderNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-        // TODO do something here
         logger.info("Inside Shapefile redeader model");
 
-        
-        // the data table spec of the single output table, 
-        // the table will have three columns:
-        
         String fname=shpFile.getStringValue();
         SimpleFeatureCollection collection = 
         		ShapeFileFeatureExtractor.getShapeFeature(fname);
@@ -99,17 +67,11 @@ public class ShapeFileReaderNodeModel extends NodeModel {
         
     
         for (int i=0; i < cellList.size(); i++ ) {
-            RowKey key = new RowKey("Row " + i);
-      
+            int index = i + 1;
             DataCell[] cells = cellList.get(i);
-			
-            DataRow row = new DefaultRow(key, cells);
-            container.addRowToTable(row);
-            
-            // check if the execution monitor was canceled
+            container.addRowToTable(new DefaultRow("Row"+index, cells));
             exec.checkCanceled();
-            exec.setProgress(i / (double)size, 
-                "Adding row " + i);
+            exec.setProgress(index / (double)size, "Adding row " + index);
         }
         
         // once we are done, we close the container and return its table
@@ -123,9 +85,6 @@ public class ShapeFileReaderNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Code executed on reset.
-        // Models build during execute are cleared here.
-        // Also data handled in load/saveInternals will be erased here.
     }
 
     /**
@@ -138,8 +97,7 @@ public class ShapeFileReaderNodeModel extends NodeModel {
     	if (shpFile.getStringValue() == null) {
 			throw new InvalidSettingsException("No shape file name specified");
 		}
-
-
+    	
         return new DataTableSpec[]{null};
     }
 

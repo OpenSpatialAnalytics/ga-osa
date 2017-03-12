@@ -4,13 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
@@ -20,11 +23,11 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.geoutils.Constants;
-
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
@@ -34,6 +37,8 @@ import com.vividsolutions.jts.geom.Geometry;
  * @author Forkan
  */
 public class DifferenceNodeModel extends NodeModel {
+	
+	private static final NodeLogger logger = NodeLogger.getLogger(DifferenceNodeModel.class);
     
     /**
      * Constructor for the node model.
@@ -55,7 +60,11 @@ public class DifferenceNodeModel extends NodeModel {
     	String columNames[] = inTable.getSpec().getColumnNames();
     	int numColumns = inTable.getSpec().getNumColumns();
     	int geomIndexs[] = new int[2];
+    	long tableSize = inTable.size();
     	
+    	/*
+    	 * find 2 index of geometry column 
+    	 */
     	int j = 0;
     	for (int i = 0; i < numColumns; i++) {
     		if (columNames[i].contains(Constants.GEOM) ){
@@ -70,53 +79,68 @@ public class DifferenceNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec(inTable.getSpec(), geomIndexs);
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
-    	RowIterator ri = inTable.iterator();
+    	int threads = Runtime.getRuntime().availableProcessors();
+		ExecutorService es = Executors.newFixedThreadPool(threads);
+		List<Future<DataCell []>> futures = new ArrayList<Future<DataCell []>>();
+		
+		int i = 1;
+    	for (DataRow r : inTable) {
+    		Callable<DataCell []> callable = new Callable<DataCell []>() {
+    			public DataCell [] call() throws Exception {
+    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
+    				  	try{
+    				  		DataCell geometryCell1 = r.getCell(geomIndexs[0]);
+    			    		DataCell geometryCell2 = r.getCell(geomIndexs[1]);
+    			    		String geoJsonString1 = ((StringValue) geometryCell1).getStringValue();	    			
+    		    			Geometry geo1 = new GeometryJSON().read(geoJsonString1);
+    		    			String geoJsonString2 = ((StringValue) geometryCell2).getStringValue();	    			
+    		    			Geometry geo2 = new GeometryJSON().read(geoJsonString2);	   
+    		    			Geometry geo = geo1.difference(geo2);
+    		    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+    		    			String str = json.toString(geo);
+    	    				cells[geomIndexs[0]] = new StringCell(str);
+    	    				int k = 0;
+    	    				for ( int col = 0; col < numColumns; col++ ) {	
+    	    					if (col == geomIndexs[0]) {
+    	    	    				k++;
+    	    					}else if(col == geomIndexs[1]){
+    	    						
+    	    					}else{
+    	    						cells[k] = r.getCell(col);
+    	    	    				k++;
+    	    					}
+    	    	    		}
+    				  	}
+    				  	catch(Exception e){
+    				  		e.printStackTrace();
+    				  		logger.error("Something wrong in Difference operation at row: "+ r.getKey());
+    				  	}
+  	    				return cells;
+    			  }
+    		  };
+    		  futures.add(es.submit(callable));
+    		  exec.checkCanceled();
+    		  exec.setProgress( 0.9 * ((double) i / (double)tableSize ), "Creating Row "+ i);
+    		  i++;
+    	}
+    	
+    	es.shutdown();
+		
+		try {
+			while(!es.awaitTermination(24, TimeUnit.HOURS));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			logger.error("Intersection operation could not be completed.");
+		}
         	    	    	    	    	
-    	try{    	
-	    	for (int i = 0; i < inTable.size(); i++ ) {
-	    		
-	    		DataRow r = ri.next();				    		
-	    		DataCell geometryCell1 = r.getCell(geomIndexs[0]);
-	    		DataCell geometryCell2 = r.getCell(geomIndexs[1]);
-	    		
-	    		
-	    		if ( (geometryCell1 instanceof StringValue) && (geometryCell2 instanceof StringValue) ){
-	    			String geoJsonString1 = ((StringValue) geometryCell1).getStringValue();	    			
-	    			Geometry geo1 = new GeometryJSON().read(geoJsonString1);
-	    			String geoJsonString2 = ((StringValue) geometryCell2).getStringValue();	    			
-	    			Geometry geo2 = new GeometryJSON().read(geoJsonString2);	    				    			
-	    		
-	    			Geometry geo = geo1.difference(geo2);
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				String str = json.toString(geo);
-    					
-    				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-    				cells[geomIndexs[0]] = new StringCell(str);
-    					
-    				int k = 0;
-					for ( int col = 0; col < numColumns; col++ ) {	
-						if (col == geomIndexs[0]) {
-		    				k++;
-						}else if(col == geomIndexs[1]){
-							
-						}else{
-							cells[k] = r.getCell(col);
-		    				k++;
-						}
-		    		}
-					
-					container.addRowToTable(new DefaultRow("Row"+i, cells));
-		    		exec.checkCanceled();
-					exec.setProgress((double) i / (double) inTable.size());  					
-	    		}
-	    				    				    				    			    			    			    			    		    							
-	    	}
+		i = 1;
+		for (Future<DataCell []> future : futures) {	 
+    		container.addRowToTable(new DefaultRow("Row"+i, future.get()));
+	    	exec.checkCanceled();
+	    	exec.setProgress( 0.9 + (0.1 * ((double) i / (double)tableSize )), "Adding Row "+i);
+	    	i++;
     	}
-    	catch (Exception e)
-    	{
-    		e.printStackTrace();
-    		
-    	}
+    	
     	container.close();
     	return new BufferedDataTable[] { container.getTable() };
     }

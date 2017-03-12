@@ -11,12 +11,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -29,7 +26,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.geoutils.Constants;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.util.GeometryCombiner;
 
 /**
  * This is the model implementation of Intersects.

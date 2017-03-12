@@ -63,20 +63,27 @@ public class MaskRasterNodeModel extends NodeModel {
 		BufferedDataContainer container = exec.createDataContainer(outSpec);
 		
 		FileUtils.cleanDirectory(new File(outPath.getStringValue())); 
+		List<String> inPathList = new ArrayList<String>();
 		
-		int index = 0;
 		for (DataRow r : inTable) {
 	    	StringCell inPathCell = (StringCell)r.getCell(inTable.getSpec().findColumnIndex(Utility.LOC_COLUMN));
 	    	String inPath = inPathCell.getStringValue();
-	    	String shpFile = Utility.MaskRaster(inPath,  outPath.getStringValue(),maskType.getStringValue(),NODATA);	    	
-	    	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
+	    	inPathList.add(inPath);
+		}
+		
+		
+		List<String> shapeFileList = Utility.MaskRaster(inPathList,  outPath.getStringValue(), maskType.getStringValue() ,NODATA, exec);
+		int index = 1;
+		
+		for (String shpFile : shapeFileList){
+			DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 			cells[0] = new StringCell(shpFile);
 			container.addRowToTable(new DefaultRow("Row"+index, cells));			
 			exec.checkCanceled();
-			exec.setProgress((double) index / (double) inTable.size());			
+			exec.setProgress(0.9 + (0.1 * ((double) index / (double) inTable.size())));			
 			index++;	    	
 		}
-					
+				
 		container.close();
 		return new BufferedDataTable[] { container.getTable() };
 		        

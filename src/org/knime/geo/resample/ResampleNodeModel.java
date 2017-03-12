@@ -1,28 +1,20 @@
 package org.knime.geo.resample;
 
-import java.io.BufferedReader;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -56,7 +48,7 @@ public class ResampleNodeModel extends NodeModel {
 		static final String OUTPATH = "output_path";
 		static final String OF = "output_format";
 		static final String TAP = "tap";
-		static final String S_SRS = "src_srs";
+		static final String S_SRS = "source_srs";
 		static final String T_SRS = "t_srs";
 		static final String RC = "run_command";
 		static final String DF = "directory_format";
@@ -69,7 +61,6 @@ public class ResampleNodeModel extends NodeModel {
 	    public final SettingsModelBoolean overWrite = new SettingsModelBoolean(OR,true);
 	    public final SettingsModelString outPath = new SettingsModelString(OUTPATH,"");
 	    public final SettingsModelString outputFormat = new SettingsModelString(OF,"GTiff");
-	    public final SettingsModelString location = new SettingsModelString(Utility.LOC_COLUMN,"Location");
 	    public final SettingsModelString df = new SettingsModelString(DF,DirectoryFormat.MainDir.toString());
 	    
 	    public final SettingsModelBoolean tap = new SettingsModelBoolean(TAP,false);
@@ -99,36 +90,39 @@ public class ResampleNodeModel extends NodeModel {
 		
 		FileUtils.cleanDirectory(new File(outPath.getStringValue())); 
     	
-    	RowIterator ri = inTable.iterator();
-    	long numFiles = inTable.size();
-    	int index = 0;
+    	int locIndex = inTable.getSpec().findColumnIndex(Utility.LOC_COLUMN);
+   
     	int iter = 0;
     	
     	String selectedColumn = "";
     	String prevValue = "none";
+    	boolean subDirectorySelected = false;
+    	
     	
     	if(columnNames.getStringValue() == null)
     		selectedColumn = "none";
-    	else
+    	else {
     		selectedColumn = columnNames.getStringValue();
+    		if ( (selectedColumn.compareTo("none") != 0) && 
+					(df.getStringValue().compareTo(DirectoryFormat.SubDir.toString())==0) ){
+    			subDirectorySelected = true;
+    		}
+    	}
     	
-    	while (ri.hasNext()){
+    	List <String> inputPaths = new ArrayList<String>();
+    	List <String> subDirectories = new ArrayList<String>();
+    	List <String> outputFileNames = new ArrayList<String>();
+    	List <DataCell []> cellList = new ArrayList<DataCell []>();
     	
-	    	DataRow r = ri.next();
+    	for (DataRow r : inTable) {
 	    	StringCell inPathCell = (StringCell)r.getCell(inTable.getSpec().findColumnIndex(Utility.LOC_COLUMN));
 	    	String inPath = inPathCell.getStringValue();
+	    	inputPaths.add(inPath);
 	    	
-	    	boolean isZip = false;
-	    	
-	    	if (inPath.toLowerCase().contains(".zip"))
-	    		isZip = true;
-	    	
-			int locIndex = inTable.getSpec().findColumnIndex(Utility.LOC_COLUMN);
 			int selectedIndex = -1;
 			String subDirectoryname = "none";
 			
-			if ( (selectedColumn.compareTo("none") != 0) && 
-					(df.getStringValue().compareTo(DirectoryFormat.SubDir.toString())==0) ){
+			if ( subDirectorySelected ){
 				selectedIndex = inTable.getSpec().findColumnIndex(selectedColumn);			
 				subDirectoryname = r.getCell(selectedIndex).toString();
 				if ( subDirectoryname.compareTo(prevValue) == 0 ){
@@ -139,28 +133,40 @@ public class ResampleNodeModel extends NodeModel {
 					prevValue = subDirectoryname;
 				}			
 			}
-	    	
-			String outFile = Utility.ReSampleRaster(inPath, outPath.getStringValue(), df.getStringValue(),
-					selectedColumn, subDirectoryname, Integer.toString(iter),
-					overWrite.getBooleanValue(), tap.getBooleanValue(),
-					resampleMethod.getStringValue(), workingMemory.getStringValue(), 
-					outputFormat.getStringValue(),s_srs.getStringValue(),
-					t_srs.getStringValue(), xRes.getStringValue(), yRes.getStringValue(), 
-					rc.getBooleanValue(), isZip);
+			
+			subDirectories.add(subDirectoryname);
+			outputFileNames.add(Integer.toString(iter));
 			
 			DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-			
-			//System.out.println("My Rank.........................." + rankIndex);
 			int rankIndex = inTable.getSpec().findColumnIndex(Constants.RANK);
 			if (rankIndex != -1)
 				cells[rankIndex] = r.getCell(rankIndex);
-			cells[locIndex] = new StringCell(outFile);
+			cells[locIndex] = new StringCell("");
+			cellList.add(cells);
 			
-	    	exec.checkCanceled();
-			container.addRowToTable(new DefaultRow("Row"+index, cells));
-			exec.setProgress((double) index / (double) numFiles);
-			index++;    	
     	}
+    	
+    	boolean isZip = false;
+    	if (inputPaths.get(0).toLowerCase().contains(".zip"))
+    		isZip = true;
+	    	
+		List <String> outFiles = Utility.ReSampleRaster(inputPaths, outPath.getStringValue(), df.getStringValue(),
+				selectedColumn, subDirectories, outputFileNames,
+				overWrite.getBooleanValue(), tap.getBooleanValue(),
+				resampleMethod.getStringValue(), workingMemory.getStringValue(), 
+				outputFormat.getStringValue(),s_srs.getStringValue(),
+				t_srs.getStringValue(), xRes.getStringValue(), yRes.getStringValue(), 
+				rc.getBooleanValue(), isZip, exec);
+		
+	 	int i = 0;
+		for (DataCell [] cells : cellList) {
+			cells[locIndex]	= new StringCell(outFiles.get(i));
+			container.addRowToTable(new DefaultRow("Row"+(i+1), cells));
+			exec.checkCanceled();
+			exec.setProgress(0.9 + (0.1 * ((double) (i+1) / (double) inTable.size())), "Addring row "+(i+1));
+			i++;    	
+		}
+    	
 		container.close();
 		return new BufferedDataTable[] { container.getTable() };
     }

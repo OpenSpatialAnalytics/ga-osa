@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.geotools.geojson.geom.GeometryJSON;
-import org.geotools.geometry.jts.Geometries;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -28,7 +27,6 @@ import org.knime.geoutils.Constants;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.operation.union.UnaryUnionOp;
 
 /**
  * This is the model implementation of Centroids.

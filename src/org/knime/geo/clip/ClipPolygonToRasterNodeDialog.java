@@ -9,10 +9,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.geo.mosaic.MosaicNodeModel;
-import org.knime.geo.proximity.ProximityNodeModel;
-import org.knime.geo.reader.ShapeFileReaderNodeModel;
-import org.knime.geo.resample.ResampleNodeModel;
 
 /**
  * <code>NodeDialog</code> for the "ClipPolygonToRaster" Node.
