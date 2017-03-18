@@ -886,23 +886,18 @@ public class Utility {
 	
 	private static String pathBuilder(String path)
 	{
-		return new String("\"" + path + "\"");
+		if ( isWindows() )
+			return new String("\"" + path + "\"");
+		else
+			return path;
 	}
 	
 	private static String getGdalPath()
 	{
-		/*
-		String e = System.getenv("GDAL_DATA");
-		e = e.replace("\\", "/");
-		String gdalPath = e.substring(0, e.lastIndexOf("/"));
-		return gdalPath;
-		*/
-		
-		String os = System.getProperty("os.name");
 		boolean isWindows = true;
 		
 		String token = "";
-		if ( os.startsWith("Windows") ){
+		if ( isWindows() ){
 			token = ";";
 		}
 		else{
@@ -936,78 +931,15 @@ public class Utility {
 		return StringUtils.join(commands," ");	
 	}
 	
-	private static String executeBatch(String batchFileName, ExecutionContext exec) {
-		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
-		File f;
-		
-		if ( os.startsWith("Windows") ){
-			f = new File("C:/");
-		}
-		else{
-			f = new File("/");
-			try {				
-				Process p1 = null;
-				p1 = Runtime.getRuntime().exec(importPath);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-		}
-		
-		StringBuffer output = new StringBuffer();
-
-		Process p = null;
-		ProcessBuilder pb = null;
-		try {
-			if (isWindows())
-				pb = new ProcessBuilder(new String[]{"cmd", "/c", "start /B", batchFileName});
-			else
-				pb = new ProcessBuilder(new String[]{"bin/sh", "-c" ,batchFileName});
-				
-			pb.directory(f);
-			p = pb.start();
-			exec.checkCanceled();
-			int code = p.waitFor();
-			if (code == 0){
-				BufferedReader reader =
-	                            new BufferedReader(new InputStreamReader(p.getInputStream()));
-	
-	                        String line = "";
-				while ((line = reader.readLine())!= null) {
-					output.append(line + "\n");
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return output.toString();
-	}
-	
 	private static String executeListCommand(List<List<String>> listOfCommands, ExecutionContext exec)  {
 		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
 		File f;
 		
-		if ( os.startsWith("Windows") ){
+		if ( isWindows() ){
 			f = new File("C:/");
 		}
 		else{
 			f = new File("/");
-			try {				
-				Process p1 = Runtime.getRuntime().exec(importPath);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			
 		}
 		
 		StringBuffer finalOutput = new StringBuffer();
@@ -1086,24 +1018,13 @@ public class Utility {
 	
 	private static String executeCommand(List<String> commandList) {
 		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
 		File f;
 		
-		if ( os.startsWith("Windows") ){
+		if ( isWindows() ){
 			f = new File("C:/");
 		}
 		else{
 			f = new File("/");
-			try {				
-				Process p1 = null;
-				p1 = Runtime.getRuntime().exec(importPath);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			
 		}
 		
 		String[] commands = new String[commandList.size()];
@@ -1116,7 +1037,6 @@ public class Utility {
 			ProcessBuilder pb = new ProcessBuilder(commands);
 			pb.directory(f);
 			p = pb.start();
-			//p = Runtime.getRuntime().exec(command,null,f);		
 			int code = p.waitFor();
 			if (code == 0){
 				BufferedReader reader =
@@ -1136,19 +1056,6 @@ public class Utility {
 	}
 	
 	private static String executeMergeCommand(List<List<String>> listOfCommands, List<String> listOflocations, ExecutionContext exec) {
-		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
-		if ( !os.startsWith("Windows") ){
-			try {				
-				Process p1 = null;
-				p1 = Runtime.getRuntime().exec(importPath);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
 		
 		StringBuffer finalOutput = new StringBuffer();
 		
@@ -1216,20 +1123,8 @@ public class Utility {
 	{
 		BufferedWriter bw = null;
 		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
         try {          	
            bw = new BufferedWriter(new FileWriter(fileName, true));
-           if ( !os.startsWith("Windows") ){
-        	   BufferedReader br = new BufferedReader(new FileReader(fileName));
-        	   String text = br.readLine();
-        	   br.close();
-        	   if ( text == null ) {        	   
-        		   bw.write(importPath);
-        	   	   bw.newLine();
-        	   }        	  
-   		   }
            for (List<String> commandList : listOfCommands ){
         	   	bw.write(toCommand(commandList));
            		bw.newLine();        
@@ -1269,6 +1164,126 @@ public class Utility {
 		
 	}
 	
+	public static String MergeShapeFiles(List<String> shapeFiles)
+	{
+		String inSourcePath = shapeFiles.get(0);
+		inSourcePath = inSourcePath.replace("\\", "/");
+		String inPath = inSourcePath.substring(0,inSourcePath.lastIndexOf("/"));	
+			
+		if (isWindows() ){						 						
+			for (int i = 0; i < shapeFiles.size(); i++ ) {
+				String inFile = shapeFiles.get(i).replace("\\", "/");
+				String[] inPaths = inFile.split("/");
+				String inSourceFile = inPaths[inPaths.length-1];
+				String command = "ogr2ogr -f \"ESRI Shapefile\" ";
+						
+				if ( i == 0 )
+					 command = command + mergedFileName + " " + inSourceFile;
+				else
+					command = command + "-update -append " + mergedFileName + " " + inSourceFile + " -nln Merged";
+								
+				Process p;
+				try {
+					p = Runtime.getRuntime().exec(command,null,new File(inPath));
+					p.waitFor();
+					//output += "Merged file " + inSourceFile + " \n";					
+				} catch (Exception e) {
+					e.printStackTrace();
+				}												
+			}								 
+		}
+		else{
+			/*
+			String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
+			try {				
+				Process p1 = null;
+				p1 = Runtime.getRuntime().exec(importPath);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			*/
+			
+			String command = "for f in *.shp; do ogr2ogr -update -append " + mergedFileName + " $f -f \"ESRI Shapefile\"; done;";
+			try {
+				Process p = Runtime.getRuntime().exec(command,null,new File(inPath));
+				p.waitFor();					
+			} catch (Exception e) {
+				e.printStackTrace();
+			}					
+		}
+		
+		return inPath+"/"+mergedFileName;
+					
+	}	
+	
+	private static boolean isWindows()
+	{
+		String os = System.getProperty("os.name");
+		if ( os.startsWith("Windows") )
+			return true;
+		else
+			return false;
+	}
+	
+	/*
+	private static String executeBatch(String batchFileName, ExecutionContext exec) {
+		
+		String os = System.getProperty("os.name");
+		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
+		
+		File f;
+		
+		if ( os.startsWith("Windows") ){
+			f = new File("C:/");
+		}
+		else{
+			f = new File("/");
+			try {				
+				Process p1 = null;
+				p1 = Runtime.getRuntime().exec(importPath);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+		}
+		
+		StringBuffer output = new StringBuffer();
+
+		Process p = null;
+		ProcessBuilder pb = null;
+		try {
+			if (isWindows())
+				pb = new ProcessBuilder(new String[]{"cmd", "/c", "start /B", batchFileName});
+			else
+				pb = new ProcessBuilder(new String[]{"bin/sh", "-c" ,batchFileName});
+				
+			pb.directory(f);
+			p = pb.start();
+			exec.checkCanceled();
+			int code = p.waitFor();
+			if (code == 0){
+				BufferedReader reader =
+	                            new BufferedReader(new InputStreamReader(p.getInputStream()));
+	
+	                        String line = "";
+				while ((line = reader.readLine())!= null) {
+					output.append(line + "\n");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return output.toString();
+	}
+	*/
+	
+	
+	
+	/*
 	private static void writeOutputCommand(String fileName, String command)
 	{
 		BufferedWriter bw = null;
@@ -1325,70 +1340,8 @@ public class Utility {
 	    } 		
 		
 	}
+	*/
 	
-	
-	public static String MergeShapeFiles(List<String> shapeFiles)
-	{
-		String inSourcePath = shapeFiles.get(0);
-		inSourcePath = inSourcePath.replace("\\", "/");
-		String inPath = inSourcePath.substring(0,inSourcePath.lastIndexOf("/"));	
-		String os = System.getProperty("os.name");
-		
-					
-		if ( os.startsWith("Windows") ){						 						
-			for (int i = 0; i < shapeFiles.size(); i++ ) {
-				String inFile = shapeFiles.get(i).replace("\\", "/");
-				String[] inPaths = inFile.split("/");
-				String inSourceFile = inPaths[inPaths.length-1];
-				String command = "ogr2ogr -f \"ESRI Shapefile\" ";
-						
-				if ( i == 0 )
-					 command = command + mergedFileName + " " + inSourceFile;
-				else
-					command = command + "-update -append " + mergedFileName + " " + inSourceFile + " -nln Merged";
-								
-				Process p;
-				try {
-					p = Runtime.getRuntime().exec(command,null,new File(inPath));
-					p.waitFor();
-					//output += "Merged file " + inSourceFile + " \n";					
-				} catch (Exception e) {
-					e.printStackTrace();
-				}												
-			}								 
-		}
-		else{
-			String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-			try {				
-				Process p1 = null;
-				p1 = Runtime.getRuntime().exec(importPath);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			String command = "for f in *.shp; do ogr2ogr -update -append " + mergedFileName + " $f -f \"ESRI Shapefile\"; done;";
-			try {
-				Process p = Runtime.getRuntime().exec(command,null,new File(inPath));
-				p.waitFor();
-				//output += "Merged file\n";					
-			} catch (Exception e) {
-				e.printStackTrace();
-			}					
-		}
-		
-		return inPath+"/"+mergedFileName;
-					
-	}	
-	
-	private static boolean isWindows()
-	{
-		String os = System.getProperty("os.name");
-		if ( os.startsWith("Windows") )
-			return true;
-		else
-			return false;
-	}
 	
 	/*
 	public static void main (String args[]) throws IOException
