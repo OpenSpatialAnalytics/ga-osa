@@ -1205,12 +1205,18 @@ public class Utility {
 			*/
 			
 			String command = "for f in *.shp; do ogr2ogr -update -append " + mergedFileName + " $f -f \"ESRI Shapefile\"; done;";
+			String shellScript = inPath +"/merge.sh";
+			writeLog(shellScript, command);
 			try {
-				Process p = Runtime.getRuntime().exec(command,null,new File(inPath));
+				Process p = Runtime.getRuntime().exec("sh "+shellScript,null,new File(inPath));
 				p.waitFor();					
 			} catch (Exception e) {
 				e.printStackTrace();
-			}					
+			}		
+			finally{
+				File f = new File(shellScript);
+				f.delete();
+			}
 		}
 		
 		return inPath+"/"+mergedFileName;
@@ -1225,7 +1231,7 @@ public class Utility {
 		else
 			return false;
 	}
-	
+		
 	/*
 	private static String executeBatch(String batchFileName, ExecutionContext exec) {
 		
