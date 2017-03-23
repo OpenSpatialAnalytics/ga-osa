@@ -5,20 +5,70 @@
 	  </category>
       <category description="Reading and writing geometry files" icon="icons/io.png" level-id="io" name="IO" path="/geo">
       </category>
-      <category description="Basic Geo-Spatial operations." icon="icons/operations.png" level-id="operations" name="Geoprocesing" path="/geo">
+      <category
+            after="io"
+            description="Basic Geo-Spatial operations."
+            icon="icons/operations.png"
+            level-id="operations"
+            name="Geoprocesing"
+            path="/geo">
       </category>
-      <category description="Geometry conversion" icon="icons/conversion.png" level-id="conv" name="Conversion" path="/geo">
+      <category
+            after="gdal"
+            description="Geometry conversion"
+            icon="icons/conversion.png"
+            level-id="conv"
+            name="Conversion"
+            path="/geo">
       </category>
-      <category description="Describe geometry" icon="icons/info.png" level-id="info" name="Geometry Info" path="/geo">
-      </category>
-      <category description="Geo map visualization" icon="icons/visualization.png" level-id="view" name="Map Viewer" path="/geo">
-      </category>
-      <category description="GDAL raster operations" icon="icons/gdal.png" level-id="gdal" name="Raster Operations" path="/geo">         
+      <category
+            after="conv"
+            description="Describe geometry"
+            icon="icons/info.png"
+            level-id="info"
+            name="Geometry Info"
+            path="/geo">
       </category>    
-      <category description="Boolean operations" icon="icons/boolean.png" level-id="bool" name="Boolean Operations" path="/geo">         
+      <category
+            after="info"
+            description="Boolean operations"
+            icon="icons/boolean.png"
+            level-id="bool"
+            name="Boolean Operations"
+            path="/geo">         
+      </category>
+      <category
+            after="bool"
+            description="Geo map visualization"
+            icon="icons/visualization.png"
+            level-id="view"
+            name="Map Viewer"
+            path="/geo">
+      </category>
+      <category
+            after="operations"
+            description="GDAL raster operations"
+            icon="icons/gdal.png"
+            level-id="gdal"
+            name="Raster Operations"
+            path="/geo">         
       </category>  
-       <category description="PostGIS operations" icon="icons/database-128.png" level-id="db" name="PostGIS Operations" path="/geo">         
-      </category>           
+       <category
+             after="bool"
+             description="PostGIS operations"
+             icon="icons/database-128.png"
+             level-id="db"
+             name="PostGIS Operations"
+             path="/geo">         
+      </category>   
+       <category
+             after="db"
+             description="Meta Nodes"
+             icon="icons/meta.png"
+             level-id="meta"
+             name="Meta Nodes"
+             path="/geo">         
+      </category>             
    	</extension>
    
  <extension point="org.knime.workbench.repository.nodes">
@@ -72,10 +122,30 @@
     <node category-path="/geo/db" factory-class="org.knime.MyDBReader.MyDBReaderNodeFactory" id="org.knime.MyDBReader.MyDBReaderNodeFactory"/>
     <!--node category-path="/geo/db" factory-class="org.knime.MyPortDBConn.MyPortDBConnNodeFactory" id="org.knime.MyPortDBConn.MyPortDBConnNodeFactory"/-->
     <node category-path="/geo/db" factory-class="org.knime.MyDBWriter.MyDBWriterNodeFactory" id="org.knime.MyDBWriter.MyDBWriterNodeFactory"/>
- </extension>
+</extension>
 	<extension point="org.knime.core.PortType">
 	      <portType color="#00FF00" hidden="false" name="MyDatabase Conn" objectClass="org.knime.mynode.myport.MyDatabaseConnPortObject" objectSerializer="org.knime.mynode.myport.MyDatabaseConnPortObject$Serializer" specClass="org.knime.mynode.myport.MyDatabaseConnPortObjectSpec" specSerializer="org.knime.mynode.myport.MyDatabaseConnPortObjectSpec$Serializer">
 	      </portType>
 	 </extension>
+ <extension
+       point="org.knime.workbench.repository.metanode">
+    <PersistedMetaNode
+          category-path="/geo/meta"
+          description="Find the intersection between two geometries"
+          expert-flag="false"
+          icon="icons/intersections.png"
+          id="intersects"
+          name="Intersects"
+          workflowDir="meta/Intersects/">
+    </PersistedMetaNode>
+    <PersistedMetaNode
+          category-path="/geo/meta"
+          expert-flag="false"
+          icon="icons/difference.png"
+          id="difference"
+          name="Difference"
+          workflowDir="meta/Difference/">
+    </PersistedMetaNode>
+ </extension>
    
 </plugin>
