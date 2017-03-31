@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.geometry.jts.Geometries;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -25,7 +26,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.geoutils.*;
+import org.knime.geoutils.Constants;
+import org.opensphere.geometry.algorithm.ConcaveHull;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -72,26 +74,33 @@ public class ConcaveHullNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec(inTable.getSpec());
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
-    	RowIterator ri = inTable.iterator();
+    	RowIterator ri = inTable.iterator();    	
         	    	    	    	    	
     	try{    	
 	    	for (int i = 0; i < inTable.size(); i++ ) {
 	    		
 	    		DataRow r = ri.next();				    		
 	    		DataCell geometryCell = r.getCell(geomIndex);
-	    		
+	    		String str = "";
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
 	    			Geometry g = new GeometryJSON().read(geoJsonString);
-	    			  				    			
+	    			Geometries geomType = Geometries.get(g);
+	    			if (geomType == Geometries.GEOMETRYCOLLECTION){
+	    				ConcaveHull ch = new ConcaveHull(g, target_percent);
+	    				Geometry geo = ch.getConcaveHull();
+	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+	    				str = json.toString(geo);
+	    			}
+	    			
 	    			//Geometry geo = g.convexHull();
 	    			//Transform<Geometry, Geometry> algorithm = new SnapHull();
-	    			Transform<Geometry, Geometry> algorithm = new ConcaveHull(target_percent);
-	    			Geometry geo = algorithm.transform(g);
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				String str = json.toString(geo);
-    					
+	    			//Transform<Geometry, Geometry> algorithm = new ConcaveHull(target_percent);
+	    			//Geometry geo = algorithm.transform(g);
+	    			//GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+    				//String str = json.toString(geo);
+	    		
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);
     					

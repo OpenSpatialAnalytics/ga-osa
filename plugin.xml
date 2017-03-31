@@ -36,7 +36,7 @@
 	<node category-path="/geo/operations" factory-class="org.knime.geo.difference.DifferenceNodeFactory" id="org.knime.geo.difference.DifferenceNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.split.SplitNodeFactory" id="org.knime.geo.split.SplitNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.convex.ConvexHullNodeFactory" id="org.knime.geo.convex.ConvexHullNodeFactory"/>
-	<!--node category-path="/geo/operations" factory-class="org.knime.geo.concave.ConcaveHullNodeFactory" id="org.knime.geo.concave.ConcaveHullNodeFactory"/-->
+	<node category-path="/geo/operations" factory-class="org.knime.geo.concave.ConcaveHullNodeFactory" id="org.knime.geo.concave.ConcaveHullNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.unary.UnaryUnionNodeFactory" id="org.knime.geo.unary.UnaryUnionNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.combine.CombineNodeFactory" id="org.knime.geo.combine.CombineNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.removepoints.RemoveRepPointsNodeFactory" id="org.knime.geo.removepoints.RemoveRepPointsNodeFactory"/>
