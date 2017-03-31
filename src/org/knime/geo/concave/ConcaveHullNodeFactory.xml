@@ -8,7 +8,7 @@
     
     <fullDescription>
         <intro>This node computes the concave hull of geometries represent possibly concave geometries that encloses all geometries within the set. You can think of it as shrink wrapping.</intro>
-        
+        <option name="target_percent">The target_percent is the target percent of area of convex hull the PostGIS solution will try to approach before giving up or exiting. One can think of the concave hull as the geometry you get by vacuum sealing a set of geometries. The target_percent of 1 will give you the same answer as the convex hull. A target_percent between 0 and 0.99 will give you something that should have a smaller area than the convex hull. This is different from a convex hull which is more like wrapping a rubber band around the set of geometries. </option>
         
 <!--         <option name="short name of first option (like in the dialog)">description of first option</option> -->
 <!--         <option name="short name of second option (like in the dialog)">description of second option</option> -->

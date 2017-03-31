@@ -24,6 +24,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.geoutils.*;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -35,6 +36,11 @@ import com.vividsolutions.jts.geom.Geometry;
  * @author Forkan
  */
 public class ConcaveHullNodeModel extends NodeModel {
+	
+	
+	static final String TP = "target_percent";
+	public final SettingsModelString targetPercent = new SettingsModelString(TP, "0.0");
+	private double target_percent = 0.0;
     
     /**
      * Constructor for the node model.
@@ -55,6 +61,14 @@ public class ConcaveHullNodeModel extends NodeModel {
     	BufferedDataTable inTable = inData[0];
     	int geomIndex = inTable.getSpec().findColumnIndex(Constants.GEOM);
     	
+    	try{
+    		target_percent = Double.parseDouble(targetPercent.getStringValue());      		
+    	}
+    	catch (NumberFormatException e)
+    	{
+    		throw new NumberFormatException("Target percent value must be a double value between 0.0 to 1.0");
+    	}
+    	
     	DataTableSpec outSpec = createSpec(inTable.getSpec());
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
@@ -72,8 +86,8 @@ public class ConcaveHullNodeModel extends NodeModel {
 	    			Geometry g = new GeometryJSON().read(geoJsonString);
 	    			  				    			
 	    			//Geometry geo = g.convexHull();
-	    			Transform<Geometry, Geometry> algorithm = new SnapHull();
-	    			//Transform<Geometry, Geometry> algorithm = new ConcaveHull(0.7);
+	    			//Transform<Geometry, Geometry> algorithm = new SnapHull();
+	    			Transform<Geometry, Geometry> algorithm = new ConcaveHull(target_percent);
 	    			Geometry geo = algorithm.transform(g);
 	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
     				String str = json.toString(geo);
@@ -118,11 +132,27 @@ public class ConcaveHullNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
+    	if (targetPercent.getStringValue() == null )
+    		throw new InvalidSettingsException( "Must provide a target percent value for producing concave hull");
+    	
+    	double d = -0.1;
+    	try{
+    		d = Double.parseDouble(targetPercent.getStringValue());
+    	}
+    	catch (NumberFormatException e)
+    	{
+    		throw new NumberFormatException("Target percent value must be a double value between 0.0 to 1.0");
+    	}
+    	
     	String columNames[] = inSpecs[0].getColumnNames();
     	if (!Arrays.asList(columNames).contains(Constants.GEOM)){
-			throw new InvalidSettingsException( "Input table 1 must contain 1 geometry column (the_geom)");
+			throw new InvalidSettingsException( "Input table must contains a geometry column (the_geom)");
 		}
-        return new DataTableSpec[]{null};
+    	
+    	if (!(d >= 0.0 && d <= 1.0))
+    		throw new InvalidSettingsException( "Target percent value must be a double value between 0.0 to 1.0");
+    	
+    	return new DataTableSpec[] { createSpec(inSpecs[0]) };
     }
 
     /**
