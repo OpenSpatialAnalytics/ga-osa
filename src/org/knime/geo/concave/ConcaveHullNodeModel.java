@@ -169,7 +169,7 @@ public class ConcaveHullNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-         // TODO: generated method stub
+         targetPercent.saveSettingsTo(settings);
     }
 
     /**
@@ -178,7 +178,7 @@ public class ConcaveHullNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO: generated method stub
+        targetPercent.loadSettingsFrom(settings);
     }
 
     /**
@@ -187,7 +187,7 @@ public class ConcaveHullNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO: generated method stub
+       targetPercent.validateSettings(settings);
     }
     
     /**
