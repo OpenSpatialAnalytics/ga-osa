@@ -136,7 +136,20 @@ Bundle-ClassPath: shapefilereader.jar,
  lib/xpp3_min-1.1.4c.jar,
  lib/xsd-2.6.0.jar,
  lib/knime-base.jar,
- lib/concave_hull.jar
+ lib/concave_hull.jar,
+ lib/gt-wfs-16.1.jar,
+ lib/gt-xsd-core-16.1.jar,
+ lib/gt-xsd-csw-16.1.jar,
+ lib/gt-xsd-fes-16.1.jar,
+ lib/gt-xsd-filter-16.1.jar,
+ lib/gt-xsd-gml2-16.1.jar,
+ lib/gt-xsd-gml3-16.1.jar,
+ lib/gt-xsd-ows-16.1.jar,
+ lib/gt-xsd-wfs-16.1.jar,
+ lib/net.opengis.csw-16.1.jar,
+ lib/net.opengis.fes-16.1.jar,
+ lib/net.opengis.ows-16.1.jar,
+ lib/net.opengis.wfs-16.1.jar
 Bundle-Activator: org.knime.geo.reader.ShapeFileReaderNodePlugin
 Bundle-Vendor: Forkan
 Require-Bundle: org.eclipse.core.runtime,

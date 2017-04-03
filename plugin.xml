@@ -29,6 +29,7 @@
     <node category-path="/geo/io" factory-class="org.knime.geo.shpmerge.ShapeMergeNodeFactory" id="org.knime.geo.shpmerge.ShapeMergeNodeFactory"/>
 	<node category-path="/geo/io" factory-class="org.knime.geo.listhdr.ListHdrNodeFactory" id="org.knime.geo.listhdr.ListHdrNodeFactory"/>
 	<node category-path="/geo/io" factory-class="org.knime.geo.rank.RankFilesNodeFactory" id="org.knime.geo.rank.RankFilesNodeFactory"/>
+	<node category-path="/geo/io" factory-class="org.knime.MyWFS.MyWFSNodeFactory" id="org.knime.MyWFS.MyWFSNodeFactory"/>
    	<node category-path="/geo/view" factory-class="org.knime.geo.visualizer.GeoMapViewerNodeFactory" id="org.knime.geo.visualizer.GeoMapViewerNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.buffer.BufferNodeFactory" id="org.knime.geo.buffer.BufferNodeFactory"/>
 	<node category-path="/geo/operations" factory-class="org.knime.geo.intersection.IntersectionNodeFactory" id="org.knime.geo.intersection.IntersectionNodeFactory"/>

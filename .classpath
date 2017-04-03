@@ -137,5 +137,16 @@
 	<classpathentry kind="lib" path="lib/xsd-2.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/knime-base.jar"/>
 	<classpathentry kind="lib" path="lib/concave_hull.jar"/>
+	<classpathentry kind="lib" path="lib/gt-wfs-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-core-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-wfs-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-fes-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-gml2-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-gml3-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-ows-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gt-xsd-filter-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/net.opengis.fes-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/net.opengis.wfs-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/org.w3.xlink-16.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

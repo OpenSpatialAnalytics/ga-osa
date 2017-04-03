@@ -11,6 +11,7 @@ public class Constants {
 	public static String INDEX = "index";
 	public static String OVID = "ovid";
 	public static int JsonPrecision = 16;
+	public static String localWFS = "http://127.0.0.1:8080/geoserver/wfs";
 	
 	public static boolean isGeometry(String str)
 	{

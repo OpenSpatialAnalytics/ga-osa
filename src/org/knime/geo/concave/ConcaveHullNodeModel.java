@@ -68,7 +68,7 @@ public class ConcaveHullNodeModel extends NodeModel {
     	}
     	catch (NumberFormatException e)
     	{
-    		throw new NumberFormatException("Target percent value must be a double value between 0.0 to 1.0");
+    		throw new NumberFormatException("Target percent value must be a positive double value");
     	}
     	
     	DataTableSpec outSpec = createSpec(inTable.getSpec());
@@ -87,7 +87,7 @@ public class ConcaveHullNodeModel extends NodeModel {
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
 	    			Geometry g = new GeometryJSON().read(geoJsonString);
 	    			Geometries geomType = Geometries.get(g);
-	    			if (geomType == Geometries.GEOMETRYCOLLECTION){
+	    			if (geomType == Geometries.GEOMETRYCOLLECTION){	    				
 	    				ConcaveHull ch = new ConcaveHull(g, target_percent);
 	    				Geometry geo = ch.getConcaveHull();
 	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
@@ -150,7 +150,7 @@ public class ConcaveHullNodeModel extends NodeModel {
     	}
     	catch (NumberFormatException e)
     	{
-    		throw new NumberFormatException("Target percent value must be a double value between 0.0 to 1.0");
+    		throw new NumberFormatException("Target percent value must be a double positive value");
     	}
     	
     	String columNames[] = inSpecs[0].getColumnNames();
@@ -158,8 +158,8 @@ public class ConcaveHullNodeModel extends NodeModel {
 			throw new InvalidSettingsException( "Input table must contains a geometry column (the_geom)");
 		}
     	
-    	if (!(d >= 0.0 && d <= 1.0))
-    		throw new InvalidSettingsException( "Target percent value must be a double value between 0.0 to 1.0");
+    	//if (!(d >= 0.0 && d <= 1.0))
+    		//throw new InvalidSettingsException( "Target percent value must be a double value between 0.0 to 1.0");
     	
     	return new DataTableSpec[] { createSpec(inSpecs[0]) };
     }
