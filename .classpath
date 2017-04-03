@@ -148,5 +148,6 @@
 	<classpathentry kind="lib" path="lib/net.opengis.fes-16.1.jar"/>
 	<classpathentry kind="lib" path="lib/net.opengis.wfs-16.1.jar"/>
 	<classpathentry kind="lib" path="lib/org.w3.xlink-16.1.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.3.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

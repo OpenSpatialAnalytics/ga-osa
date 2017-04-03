@@ -76,6 +76,8 @@
     <node category-path="/geo/db" factory-class="org.knime.MyDBReader.MyDBReaderNodeFactory" id="org.knime.MyDBReader.MyDBReaderNodeFactory"/>
     <!--node category-path="/geo/db" factory-class="org.knime.MyPortDBConn.MyPortDBConnNodeFactory" id="org.knime.MyPortDBConn.MyPortDBConnNodeFactory"/-->
     <node category-path="/geo/db" factory-class="org.knime.MyDBWriter.MyDBWriterNodeFactory" id="org.knime.MyDBWriter.MyDBWriterNodeFactory"/>
+<node category-path="/geo/io" factory-class="org.knime.geo.jsonwriter.GeoJsonWriterNodeFactory" id="org.knime.geo.jsonwriter.GeoJsonWriterNodeFactory"/>
+<node category-path="/geo/io" factory-class="org.knime.geo.shapetojson.ShapeToGeoJsonNodeFactory" id="org.knime.geo.shapetojson.ShapeToGeoJsonNodeFactory"/>
 </extension>
 	<extension point="org.knime.core.PortType">
 	      <portType color="#00FF00" hidden="false" name="MyDatabase Conn" objectClass="org.knime.mynode.myport.MyDatabaseConnPortObject" objectSerializer="org.knime.mynode.myport.MyDatabaseConnPortObject$Serializer" specClass="org.knime.mynode.myport.MyDatabaseConnPortObjectSpec" specSerializer="org.knime.mynode.myport.MyDatabaseConnPortObjectSpec$Serializer">
