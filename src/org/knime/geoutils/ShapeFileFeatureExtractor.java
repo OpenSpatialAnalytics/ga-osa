@@ -2,6 +2,7 @@ package org.knime.geoutils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.text.cql2.CQL;
+import org.geotools.geojson.feature.FeatureJSON;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
@@ -22,6 +24,12 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 
 public class ShapeFileFeatureExtractor {
@@ -46,6 +54,16 @@ public class ShapeFileFeatureExtractor {
 			String typeName = dataStore.getTypeNames()[0];
 			
 			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+			SimpleFeatureType schema = featureSource.getSchema();
+			CoordinateReferenceSystem crs = schema.getCoordinateReferenceSystem();
+			StringWriter s = new StringWriter();
+			FeatureJSON io = new FeatureJSON();
+			io.writeCRS(crs,  s);
+			Gson gson = new GsonBuilder().create();			
+			JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+			JsonElement entry=job.get("properties");	
+			String key = entry.toString();
+			
 			collection = featureSource.getFeatures();
 			
 			dataStore.dispose();

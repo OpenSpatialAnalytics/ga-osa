@@ -149,7 +149,8 @@ Bundle-ClassPath: shapefilereader.jar,
  lib/net.opengis.csw-16.1.jar,
  lib/net.opengis.fes-16.1.jar,
  lib/net.opengis.ows-16.1.jar,
- lib/net.opengis.wfs-16.1.jar
+ lib/net.opengis.wfs-16.1.jar,
+ lib/gson-2.3.1.jar
 Bundle-Activator: org.knime.geo.reader.ShapeFileReaderNodePlugin
 Bundle-Vendor: Forkan
 Require-Bundle: org.eclipse.core.runtime,

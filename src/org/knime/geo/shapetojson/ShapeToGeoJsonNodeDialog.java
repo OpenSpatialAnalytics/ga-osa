@@ -45,6 +45,8 @@ public class ShapeToGeoJsonNodeDialog extends DefaultNodeSettingsPane {
      		     	".geojson");
        	
        	outPath.setBorderTitle("Output GeoJSON file");
+       	
+       	addDialogComponent(outPath);
 
     }
 }
