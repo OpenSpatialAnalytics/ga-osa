@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
-import org.geotools.geometry.jts.FactoryFinder;
 import org.geotools.geometry.jts.Geometries;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -30,10 +28,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.geoutils.Constants;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.union.UnaryUnionOp;
 
 /**
@@ -77,7 +71,8 @@ public class UnaryUnionNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = new GeometryJSON().read(geoJsonString);
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);
+	    			String crs = Constants.GetCRS(geoJsonString);
 	    			Geometries geomType = Geometries.get(g);
 	    				    			
 	    			Geometry geo = null;
@@ -99,27 +94,7 @@ public class UnaryUnionNodeModel extends NodeModel {
 	    				geo = UnaryUnionOp.union(geometries);
 	    			}
 	    			
-	    			/*
-	    			geomType = Geometries.get(geo);
-	    			if (geomType == Geometries.MULTIPOLYGON){
-	    				Polygon[] polygons = new Polygon[geo.getNumGeometries()];
-	    				for (int j = 0; j < geo.getNumGeometries(); j++ ){
-	    					polygons[j] = (Polygon) geo.getGeometryN(j);	    					
-	    				}	    				
-	    				GeometryFactory factory = FactoryFinder.getGeometryFactory( null );
-	    				geo = new MultiPolygon(polygons, factory);
-	    			}
-	    			*/
-	    					    				    			    				    			  				    			
-	    			//Geometry geo = g.union();
-	    			//Geometry geo = UnaryUnionOp.union(geometries);
-	    			//GeometryFactory factory = FactoryFinder.getGeometryFactory( null );	
-	    			//GeometryCollection geometryCollection =
-	    			          //(GeometryCollection) factory.buildGeometry( geometries );	    			
-	    			//Geometry geo = geometryCollection.union();
-	    			
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				String str = json.toString(geo);
+    				String str = Constants.GeometryToGeoJSON(geo, crs);
     					
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);

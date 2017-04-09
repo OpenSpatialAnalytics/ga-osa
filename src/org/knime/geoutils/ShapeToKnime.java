@@ -33,8 +33,11 @@ public class ShapeToKnime {
 		
 		for (AttributeType t : type.getTypes()) {
 			if (t == type.getGeometryDescriptor().getType()) {
-				columns.add(new DataColumnSpecCreator(type.getGeometryDescriptor().getLocalName().toString(), 
-						StringCell.TYPE).createSpec());
+				String geomColName = type.getGeometryDescriptor().getLocalName().toString();
+				if (geomColName.compareTo(Constants.GEOM) == 0)
+					columns.add(new DataColumnSpecCreator(geomColName, StringCell.TYPE).createSpec());
+				else
+					columns.add(new DataColumnSpecCreator(Constants.GEOM, StringCell.TYPE).createSpec());
 			}
 			
 			else{
@@ -59,7 +62,7 @@ public class ShapeToKnime {
 		return new DataTableSpec[] { new DataTableSpec(columns.toArray(new DataColumnSpec[0])) };
 	}
 	
-	public static ArrayList<DataCell []> createCell(SimpleFeatureCollection collection)
+	public static ArrayList<DataCell []> createCell(String crs, SimpleFeatureCollection collection)
 	{
 		SimpleFeatureIterator iterator = collection.features();
 		int numOfColums = collection.getSchema().getTypes().size();
@@ -76,8 +79,7 @@ public class ShapeToKnime {
 				
 				Object value = p.getValue();
 				String str = "";
-				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-
+			
 				if (value == null) {
 					cells[column] = DataType.getMissingCell();
 				} else if (value instanceof Geometry) {
@@ -87,16 +89,17 @@ public class ShapeToKnime {
 	    				MultiPolygon  mp = (MultiPolygon)geo;
 	    				if (mp.getNumGeometries() == 1){
 	    					Polygon poly = (Polygon) mp.getGeometryN(0);
-	    					str = json.toString(poly);
+	    					str = Constants.GeometryToGeoJSON(poly);
 	    				}
 	    				else{
-	    					str = json.toString(mp);
+	    					str = Constants.GeometryToGeoJSON(mp);
 	    				}
 	    			}
 	    			else{						    				
-	    				str = json.toString((Geometry)value);
-	    			}	    				
-					cells[column] = new StringCell(str);
+	    				str = Constants.GeometryToGeoJSON((Geometry)value);
+	    			}	
+	    			String featureStr = Constants.AppendCRS(crs, str);
+					cells[column] = new StringCell(featureStr);
 				} else if (value instanceof Integer) {
 					cells[column] = new IntCell((Integer) p.getValue());
 				} else if (value instanceof Long){

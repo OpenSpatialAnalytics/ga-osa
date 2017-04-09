@@ -1,8 +1,17 @@
 package org.knime.geoutils;
 
+import java.io.IOException;
+
 import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.referencing.CRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 public class Constants {
 	
@@ -27,5 +36,101 @@ public class Constants {
 			return false;
 		}
 	}
+	
+	public static String GeometryToGeoJSON(Geometry geo)
+	{
+		GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+		String str = json.toString(geo);
+		return str;
+	}
+	
+	public static String GeometryToGeoJSON(Geometry geo, String crs)
+	{
+		GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+		String str = json.toString(geo);
+		return Constants.AppendCRS(crs, str);
+	}
+	
+	public static String GeometryToGeoJSON(MultiPolygon geo)
+	{
+		GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+		String str = json.toString(geo);
+		return str;
+	}
+	
+	public static String GeometryToGeoJSON(Polygon geo)
+	{
+		GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
+		String str = json.toString(geo);
+		return str;
+	}
+	
+	public static Geometry GeoJsonToGeometry(String geoJsonString) throws IOException
+	{
+		Geometry geo = new GeometryJSON().read(geoJsonString);
+		return geo;
+	}
+	
+	public static Geometry FeatureToGeometry(String featureStr) throws IOException
+	{
+		Geometry geo = new GeometryJSON().read(Constants.GetGeoJsonStr(featureStr));
+		return geo;
+	}
+	
+	public static String AppendCRS (String crs, String jsonString)
+	{
+		if (crs.isEmpty() || crs == "")
+			return jsonString;
+		else{
+			String featureStr = crs + "|" + jsonString;
+			return featureStr;
+		}
+	}
+	
+	public static String GetCRS (String featureStr)
+	{
+		String[] parts = featureStr.split("\\|");
+		if (parts.length > 1 )
+			return parts[0]; //first part is the CRS value
+		else
+			return "";
+	}
+	
+	public static String GetGeoJsonStr (String featureStr)
+	{
+		String[] parts = featureStr.split("\\|");
+		if (parts.length > 1 )
+			return parts[1];
+		else
+			return parts[0];
+	}
+	
+	/* parse crs string by : and get the last part which have EPSG value */
+	/*extract 28353 from {"name":"EPSG:28353"}*/
+	public static String GetSRID(String crs)
+	{
+		String[] parts = crs.split(":");
+		return  parts[2].substring(0, parts[2].length()-2);
+	}
+	
+	public static String GetCRSCode(String crs)
+	{
+		String[] parts = crs.split("\"");
+		return  parts[3];
+	}
+	
+	public static String GetCrsJson(String srid)
+	{
+		return "{\"name\":\"EPSG:"+srid+"\"}";
+	}
+	
+	public static MathTransform FindMathTransform(String crsStr1, String crsStr2) throws NoSuchAuthorityCodeException, FactoryException 
+	{
+		CoordinateReferenceSystem srcCRS = CRS.decode(crsStr2);
+		CoordinateReferenceSystem targetCRS = CRS.decode(crsStr1);
+		MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);
+		return transform;
+	}
+	
 
 }

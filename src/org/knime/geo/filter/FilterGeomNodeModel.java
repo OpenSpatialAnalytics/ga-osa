@@ -74,11 +74,10 @@ public class FilterGeomNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
+    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
     			Geometries gType = Geometries.get(geo);
     			if (gType.toString().equals(geomType.getStringValue())){
-    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-					String str = json.toString(geo);
+					String str = Constants.GeometryToGeoJSON(geo, Constants.GetCRS(geoJsonString));
 					DataCell[] cells = new DataCell[outSpec.getNumColumns()];	  
 					cells[geomIndex] = new StringCell(str);
 					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -97,8 +96,7 @@ public class FilterGeomNodeModel extends NodeModel {
     						GeometryCollection  gc = (GeometryCollection)geo;
     	    				for (int i = 0; i < gc.getNumGeometries(); i++ ){
     	    					Geometry g = (Geometry) gc.getGeometryN(i);	    					
-    	    					GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    	    					String str = json.toString(g);
+    	    					String str = Constants.GeometryToGeoJSON(g, Constants.GetCRS(geoJsonString));
     	    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];	
     	    					cells[geomIndex] = new StringCell(str);
     	    					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -120,8 +118,7 @@ public class FilterGeomNodeModel extends NodeModel {
 	    					Geometries gTypeChild = Geometries.get(g);
 	    					
 	    					if (gTypeChild.toString().equals(geomType.getStringValue())){
-	    						GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-		    					String str = json.toString(g);
+		    					String str = Constants.GeometryToGeoJSON(g, Constants.GetCRS(geoJsonString));
 		    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];	
 		    					cells[geomIndex] = new StringCell(str);
 		    					for ( int col = 0; col < numberOfColumns; col++ ) {	

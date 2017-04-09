@@ -26,6 +26,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.geoutils.Constants;
 import org.knime.geoutils.WriteShapefile;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -77,16 +78,18 @@ public class GeoMapViewerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
     	
     	BufferedDataTable geometryTable = inData[0];
+    	int geomIndex = geometryTable.getSpec().findColumnIndex(Constants.GEOM);
 
     	DataRow firstRow =  geometryTable.iterator().next();
-    	DataCell firstCell = firstRow.getCell(0);
-    	String jsonStr = ((StringValue) firstCell).getStringValue();
+    	DataCell firstCell = firstRow.getCell(geomIndex);
+    	String featureStr = ((StringValue) firstCell).getStringValue();
+    	String jsonStr = Constants.GetGeoJsonStr(featureStr);
     	String geomType = getGeomType(jsonStr);
     	if (geomType.compareTo("Polygon") == 0)
     		geomType = "MultiPolygon";
     	
     	SimpleFeatureType schemaDef = 
-				DataUtilities.createType(geomType, "the_geom:"+geomType+":srid=4326,name:String,timestamp:java.util.Date");
+				DataUtilities.createType(geomType, "the_geom:"+geomType+":srid="+Constants.GetSRID(Constants.GetCRS(featureStr))+",name:String,timestamp:java.util.Date");
 		
     	List<SimpleFeature> feats = new ArrayList<SimpleFeature>();
     	
@@ -98,7 +101,7 @@ public class GeoMapViewerNodeModel extends NodeModel {
 	    		
 	    		if (geometryCell instanceof StringValue){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-	    			Geometry geo = new GeometryJSON().read(geoJsonString);
+	    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
 	    			SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(schemaDef);
 					featureBuilder.add(geo);
 					SimpleFeature feature = featureBuilder.buildFeature(null);

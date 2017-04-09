@@ -46,6 +46,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.geoutils.Constants;
+import org.knime.geoutils.FeatureGeometry;
+import org.knime.geoutils.ShapeFileFeatureExtractor;
+import org.knime.geoutils.ShapeToKnime;
 import org.opengis.feature.Property;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -93,62 +96,34 @@ public class MyWFSNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-		 
-         DataTableSpec outputSpec = null;
-		 BufferedDataContainer container = null;
-		  
-		  try {		  
-				String typeNames[] = dataStore.getTypeNames();				
-				String typeName = m_selStr.getStringValue();
 				
-				SimpleFeatureType schema = dataStore.getSchema( typeName );				
-				outputSpec = createSpec(schema)[0];
-				container = exec.createDataContainer(outputSpec);
-				
-				SimpleFeatureSource source = dataStore.getFeatureSource(typeName);
-				featurescollec = source.getFeatures();
-				SimpleFeatureIterator fIterator = featurescollec.features();
-				
-				int index = 0;
-				int count = 0;
-				GeometryJSON geojson = new GeometryJSON(Constants.JsonPrecision);
-				
-				while(fIterator.hasNext()){
-					SimpleFeature sf = fIterator.next();
-					DataCell[] cells = new DataCell[outputSpec.getNumColumns()];
-			      	for (Property p : sf.getProperties()) {
-						int column = outputSpec.findColumnIndex(p.getName().toString());
-						Object value = p.getValue();
-	
-						if (value == null) {
-							cells[column] = DataType.getMissingCell();
-						 } else if (value instanceof Geometry) {
-						   cells[column] = new StringCell(geojson.toString((Geometry)(p.getValue())));						
-						} else if (value instanceof Integer) {
-							cells[column] = new IntCell((Integer) p.getValue());
-						} else if (value instanceof Double) {
-							cells[column] = new DoubleCell((Double) p.getValue());
-						} else if (value instanceof Boolean) {
-							cells[column] = BooleanCellFactory.create((Boolean) p.getValue());
-						} else if (p.getValue().toString().isEmpty()) {
-							cells[column] = DataType.getMissingCell();
-						} else {
-							cells[column] = new StringCell(p.getValue().toString());
-						}
-					}
-		      
-		    	container.addRowToTable(new DefaultRow(String.valueOf(index), cells));
-		    	index++;
-		    	exec.checkCanceled();
-				exec.setProgress((double) count / (double) featurescollec.size());
-				count++;		    			     
-		      }
-		  } catch (IOException ex) {
-		      ex.printStackTrace();
-		  }	 		         
+		String typeName = m_selStr.getStringValue();
+		
+		FeatureGeometry featureGeometry = ShapeFileFeatureExtractor.getShapeFeature(dataStore,typeName);
+        String crs = featureGeometry.crs;
+        SimpleFeatureCollection collection = featureGeometry.collection;
+        
+        DataTableSpec outputSpec = ShapeToKnime.createSpec(collection)[0];
+        BufferedDataContainer container = exec.createDataContainer(outputSpec);
+		
+		int size = collection.size();
+	        
+        ArrayList<DataCell []> cellList = ShapeToKnime.createCell(crs,collection);
+        
+        for (int i=0; i < cellList.size(); i++ ) {
+            int index = i + 1;
+            DataCell[] cells = cellList.get(i);
+            container.addRowToTable(new DefaultRow("Row"+index, cells));
+            exec.checkCanceled();
+            exec.setProgress(index / (double)size, "Adding row " + index);
+        }
+        
+        // once we are done, we close the container and return its table
         container.close();
         BufferedDataTable out = container.getTable();
         return new BufferedDataTable[]{out};
+				
+				
     }
 
     /**

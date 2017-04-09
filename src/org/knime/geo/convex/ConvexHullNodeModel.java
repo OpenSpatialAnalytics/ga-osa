@@ -69,11 +69,9 @@ public class ConvexHullNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = new GeometryJSON().read(geoJsonString);
-	    			  				    			
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);	
 	    			Geometry geo = g.convexHull();
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				String str = json.toString(geo);
+    				String str = Constants.GeometryToGeoJSON(geo, Constants.GetCRS(geoJsonString));
     					
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);

@@ -52,18 +52,13 @@ import com.vividsolutions.jts.geom.Geometry;
 public class GeoJsonWriterNodeModel extends NodeModel {
 	
 	  static final String CFG_LOC = "FilePath";
-	  static final String PROJ = "projection";
-	  public final SettingsModelString jsonFileLoc =
-		        new SettingsModelString(CFG_LOC,"");
-	  public final SettingsModelString projection =
-		        new SettingsModelString(PROJ,"");
+	  public final SettingsModelString jsonFileLoc =new SettingsModelString(CFG_LOC,"");
     
     /**
      * Constructor for the node model.
      */
     protected GeoJsonWriterNodeModel() {
     
-        // TODO: Specify the amount of input and output ports needed.
         super(1, 0);
     }
 
@@ -79,7 +74,8 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     	
     	DataRow firstRow =  inTable.iterator().next();
     	DataCell firstCell = firstRow.getCell(0);
-    	String jsonStr = ((StringValue) firstCell).getStringValue();
+    	String featureStr = ((StringValue) firstCell).getStringValue();
+    	String jsonStr = Constants.GetGeoJsonStr(featureStr);
     	String geomType = getGeomType(jsonStr);
     	
     	if (geomType.compareTo("Polygon") == 0)
@@ -90,8 +86,7 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     	int geomIndex = inTable.getSpec().findColumnIndex(Constants.GEOM);
     	int numberOfColumns = inTable.getSpec().getNumColumns();
     	
-    	String schema = "the_geom:"+geomType+":srid="+projection.getStringValue()+",";
-    	//String schema = "the_geom:MultiPolygon:srid="+projection.getStringValue()+",";
+    	String schema = "the_geom:"+geomType+":srid="+Constants.GetSRID(Constants.GetCRS(featureStr))+",";
     	
     	for ( int col = 0; col < numberOfColumns; col++ ) {	
 			if (col != geomIndex ) {
@@ -199,10 +194,6 @@ public class GeoJsonWriterNodeModel extends NodeModel {
 			throw new InvalidSettingsException("No GeoJSON file name specified");
 		}
     	
-    	if (projection.getStringValue() == null) {
-			throw new InvalidSettingsException("You must have a srid number for projection");
-		}
-
         return null;
     }
 
@@ -212,7 +203,6 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     	jsonFileLoc.saveSettingsTo(settings);
-    	projection.saveSettingsTo(settings);
     }
 
     /**
@@ -222,7 +212,6 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     	jsonFileLoc.loadSettingsFrom(settings);
-    	projection.loadSettingsFrom(settings);
     }
 
     /**
@@ -232,7 +221,6 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     	 jsonFileLoc.validateSettings(settings);
-         projection.validateSettings(settings);
     }
     
     /**
@@ -242,7 +230,7 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
+     
     }
     
     /**
@@ -252,7 +240,6 @@ public class GeoJsonWriterNodeModel extends NodeModel {
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
     }
     
     private String getGeomType(String jsonStr)

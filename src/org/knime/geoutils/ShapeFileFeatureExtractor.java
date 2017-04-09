@@ -13,6 +13,7 @@ import org.geotools.data.DataStoreFinder;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.data.wfs.WFSDataStore;
 import org.geotools.filter.text.cql2.CQL;
 import org.geotools.geojson.feature.FeatureJSON;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -39,7 +40,7 @@ public class ShapeFileFeatureExtractor {
 	 * @param path of shapefile
 	 * @return return the whole shape file as SimpleCollection
 	 */
-	public static SimpleFeatureCollection getShapeFeature(String fileName)
+	public static FeatureGeometry getShapeFeature(String fileName)
 	{
 		SimpleFeatureCollection collection;
 		
@@ -54,6 +55,8 @@ public class ShapeFileFeatureExtractor {
 			String typeName = dataStore.getTypeNames()[0];
 			
 			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
+			
+			/* get CRS value */
 			SimpleFeatureType schema = featureSource.getSchema();
 			CoordinateReferenceSystem crs = schema.getCoordinateReferenceSystem();
 			StringWriter s = new StringWriter();
@@ -64,11 +67,13 @@ public class ShapeFileFeatureExtractor {
 			JsonElement entry=job.get("properties");	
 			String key = entry.toString();
 			
+			/* get total collection */
 			collection = featureSource.getFeatures();
+			FeatureGeometry featureGeometry = new FeatureGeometry(key, collection);
 			
 			dataStore.dispose();
 			
-			return collection;
+			return featureGeometry;
 			
     	}catch (Exception e) {
 			e.printStackTrace();
@@ -76,7 +81,7 @@ public class ShapeFileFeatureExtractor {
 		} 	
 	}
 	
-	public static SimpleFeatureCollection getGeometryFeature(String fileName) 
+	public static FeatureGeometry getGeometryFeature(String fileName) 
 	{
 		SimpleFeatureCollection collection;
 		
@@ -92,13 +97,24 @@ public class ShapeFileFeatureExtractor {
 			
 			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
 			FeatureType schema = featureSource.getSchema();
+			CoordinateReferenceSystem crs = schema.getCoordinateReferenceSystem();
+			StringWriter s = new StringWriter();
+			FeatureJSON io = new FeatureJSON();
+			io.writeCRS(crs,  s);
+			Gson gson = new GsonBuilder().create();			
+			JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+			JsonElement entry=job.get("properties");	
+			String key = entry.toString();
+			
 	        String name = schema.getGeometryDescriptor().getLocalName();
 	        Query query = new Query(typeName, Filter.INCLUDE, new String[] { name });
 			collection = featureSource.getFeatures(query);
 			
+			FeatureGeometry featureGeometry = new FeatureGeometry(key, collection);
+			
 			dataStore.dispose();
 			
-			return collection;
+			return featureGeometry;
 			
     	}catch (Exception e) {
 			e.printStackTrace();
@@ -106,7 +122,7 @@ public class ShapeFileFeatureExtractor {
 		} 	
 	}
 	
-	public static SimpleFeatureCollection getGeometryFeature(String fileName, String filterQuery)
+	public static FeatureGeometry getGeometryFeature(String fileName, String filterQuery)
 	{
 		SimpleFeatureCollection collection;
 		
@@ -123,15 +139,26 @@ public class ShapeFileFeatureExtractor {
 			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
 			FeatureType schema = featureSource.getSchema();
 	        String name = schema.getGeometryDescriptor().getLocalName();
+	        
+			CoordinateReferenceSystem crs = schema.getCoordinateReferenceSystem();
+			StringWriter s = new StringWriter();
+			FeatureJSON io = new FeatureJSON();
+			io.writeCRS(crs,  s);
+			Gson gson = new GsonBuilder().create();			
+			JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+			JsonElement entry=job.get("properties");	
+			String key = entry.toString();
 	        
 	        Filter filter = CQL.toFilter(filterQuery);
 	        
 	        Query query = new Query(typeName, filter, new String[] { name });
 			collection = featureSource.getFeatures(query);
 			
+			FeatureGeometry featureGeometry = new FeatureGeometry(key, collection);
+			
 			dataStore.dispose();
 			
-			return collection;
+			return featureGeometry;
 			
     	}catch (Exception e) {
 			e.printStackTrace();
@@ -140,35 +167,37 @@ public class ShapeFileFeatureExtractor {
 	}
 	
 	
-	/*
-	public static void main (String args[])
+	public static FeatureGeometry getShapeFeature(WFSDataStore dataStore, String typeName)
 	{
+		SimpleFeatureCollection collection;
 		
-		String elevband = "E:\\GA Project\\Simple Case Study\\Source Data\\reserves.shp";
-		SimpleFeatureCollection collection1 = getShapeFeature(elevband);
-		SimpleFeatureType type = collection1.getSchema();
-		
-		for (AttributeType t : type.getTypes()) {
-			if (t == type.getGeometryDescriptor().getType()) {
-				System.out.println(type.getGeometryDescriptor().getLocalName().toString());
-			}
+		try {
 			
-			else{
+			SimpleFeatureSource featureSource = dataStore.getFeatureSource(typeName);
 			
-				String name = t.getName().toString();
-	
-				if (t.getBinding() == Integer.class) {
-					System.out.println("Integer: " + name);
-				} else if (t.getBinding() == Double.class) {
-					System.out.println("Double: " + name);
-				} else if (t.getBinding() == Boolean.class) {
-					System.out.println("Boolean: " + name);
-				} else {
-					System.out.println("String: " + name);
-				}
-			}
-		}
-		System.out.println(type.getTypes().size());
-	}*/
+			/* get CRS value */
+			SimpleFeatureType schema = featureSource.getSchema();
+			CoordinateReferenceSystem crs = schema.getCoordinateReferenceSystem();
+			StringWriter s = new StringWriter();
+			FeatureJSON io = new FeatureJSON();
+			io.writeCRS(crs,  s);
+			Gson gson = new GsonBuilder().create();			
+			JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+			JsonElement entry=job.get("properties");	
+			String key = entry.toString();
+			
+			/* get total collection */
+			collection = featureSource.getFeatures();
+			FeatureGeometry featureGeometry = new FeatureGeometry(key, collection);
+			
+			dataStore.dispose();
+			
+			return featureGeometry;
+			
+    	}catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} 	
+	}
 
 }

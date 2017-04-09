@@ -25,10 +25,12 @@ public class ShapeFileWriterNodeDialog extends DefaultNodeSettingsPane {
      */
     protected ShapeFileWriterNodeDialog() {
     	
+    	/*
     	DialogComponentString projDialog = new DialogComponentString(
     			new SettingsModelString(ShapeFileWriterNodeModel.PROJ,""), "Projection srid value");
     	
     	addDialogComponent(projDialog);
+    	*/
     	
     	DialogComponentFileChooser outPath = new DialogComponentFileChooser(
   		      new SettingsModelString(ShapeFileWriterNodeModel.CFG_LOC,""),

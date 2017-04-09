@@ -26,6 +26,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -54,11 +55,9 @@ import com.vividsolutions.jts.geom.Geometry;
 public class ShapeFileWriterNodeModel extends NodeModel {
 	
 	  static final String CFG_LOC = "FilePath";
-	  static final String PROJ = "projection";
-	  public final SettingsModelString shpFileLoc =
-		        new SettingsModelString(CFG_LOC,"");
-	  public final SettingsModelString projection =
-		        new SettingsModelString(PROJ,"");
+	  //static final String PROJ = "projection";
+	  public final SettingsModelString shpFileLoc = new SettingsModelString(CFG_LOC,"");
+	  //public final SettingsModelString projection = new SettingsModelString(PROJ,"");
 
 
     
@@ -79,10 +78,12 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     	
     	String fname=shpFileLoc.getStringValue().concat(".shp");
     	BufferedDataTable inTable = inData[0];
+    	int geomIndex = inTable.getSpec().findColumnIndex(Constants.GEOM);
     	
     	DataRow firstRow =  inTable.iterator().next();
-    	DataCell firstCell = firstRow.getCell(0);
-    	String jsonStr = ((StringValue) firstCell).getStringValue();
+    	DataCell firstCell = firstRow.getCell(geomIndex);
+    	String featureStr = ((StringValue) firstCell).getStringValue();
+    	String jsonStr = Constants.GetGeoJsonStr(featureStr);
     	String geomType = getGeomType(jsonStr);
     	
     	if (geomType.compareTo("Polygon") == 0)
@@ -90,10 +91,10 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     	if (geomType.compareTo("LineString") == 0)
     		geomType = "MultiLineString";    	
     	
-    	int geomIndex = inTable.getSpec().findColumnIndex(Constants.GEOM);
+    	
     	int numberOfColumns = inTable.getSpec().getNumColumns();
     	
-    	String schema = "the_geom:"+geomType+":srid="+projection.getStringValue()+",";
+    	String schema = "the_geom:"+geomType+":srid="+Constants.GetSRID(Constants.GetCRS(featureStr))+",";
     	//String schema = "the_geom:MultiPolygon:srid="+projection.getStringValue()+",";
     	
     	for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -137,8 +138,8 @@ public class ShapeFileWriterNodeModel extends NodeModel {
 	    		DataCell geometryCell = row.getCell(geomIndex);
 	    		
 	    		if (geometryCell instanceof StringValue){
-	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-	    			Geometry geo = new GeometryJSON().read(geoJsonString);
+	    			String featureString = ((StringValue) geometryCell).getStringValue();
+	    			Geometry geo = Constants.FeatureToGeometry(featureString);
 	    			SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(schemaDef);
 					featureBuilder.add(geo);
 					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -152,7 +153,9 @@ public class ShapeFileWriterNodeModel extends NodeModel {
 								featureBuilder.add(((DoubleValue) cell).getDoubleValue());
 							else if (cell instanceof BooleanValue)
 								featureBuilder.add(((BooleanValue) cell).getBooleanValue());
-							else
+							else if (cell instanceof MissingCell)
+								featureBuilder.add(DataType.getMissingCell());
+							else 
 								featureBuilder.add( ((StringValue) cell).getStringValue());
 						}
 					}
@@ -185,7 +188,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO: generated method stub
     }
 
     /**
@@ -199,11 +201,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
 			throw new InvalidSettingsException("No shape file name specified");
 		}
     	
-    	if (projection.getStringValue() == null) {
-			throw new InvalidSettingsException("You must have a srid number for projection");
-		}
-
-    	
         return null;
     }
 
@@ -213,7 +210,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     	shpFileLoc.saveSettingsTo(settings);
-    	projection.saveSettingsTo(settings);
     }
 
     /**
@@ -223,7 +219,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     	shpFileLoc.loadSettingsFrom(settings);
-    	projection.loadSettingsFrom(settings);
     }
 
     /**
@@ -233,7 +228,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         shpFileLoc.validateSettings(settings);
-        projection.validateSettings(settings);
     }
     
     /**
@@ -243,7 +237,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
     }
     
     /**
@@ -253,7 +246,6 @@ public class ShapeFileWriterNodeModel extends NodeModel {
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
     }
     
     

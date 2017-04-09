@@ -5,16 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.Geometries;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -31,7 +28,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -72,7 +68,8 @@ public class RemoveHolesNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
+    			String crs = Constants.GetCRS(geoJsonString);
+		  		Geometry geo = Constants.FeatureToGeometry(geoJsonString); 	
     			Geometries geomType = Geometries.get(geo);	    			
     			if (geomType == Geometries.MULTIPOLYGON){	
     				MultiPolygon  mp = (MultiPolygon)geo;
@@ -90,8 +87,7 @@ public class RemoveHolesNodeModel extends NodeModel {
     				}
     				
     				MultiPolygon newMP = new GeometryFactory().createMultiPolygon(polygons);
-    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-					String str = json.toString(newMP);
+					String str = Constants.GeometryToGeoJSON(newMP, crs);
 					cells[geomIndex] = new StringCell(str);
     			}
     			
@@ -102,13 +98,11 @@ public class RemoveHolesNodeModel extends NodeModel {
 						LinearRing linearRing = new GeometryFactory().createLinearRing(coordinates);
 						poly = new GeometryFactory().createPolygon(linearRing);
 					}
-    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-					String str = json.toString(poly);
+					String str = Constants.GeometryToGeoJSON(poly, crs);
 					cells[geomIndex] = new StringCell(str);
     			}
     			else{
-    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-					String str = json.toString(geo);
+    				String str = Constants.GeometryToGeoJSON(geo, crs);
 					cells[geomIndex] = new StringCell(str);
     			}
     			

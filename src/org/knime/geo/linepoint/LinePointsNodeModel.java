@@ -71,7 +71,8 @@ public class LinePointsNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
+    			String crs = Constants.GetCRS(geoJsonString);
+    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
     			Geometries gtype = Geometries.get(geo);
     			Point p1 = null;
     			Point p2 = null;
@@ -81,16 +82,14 @@ public class LinePointsNodeModel extends NodeModel {
     				p2 = ls.getEndPoint();
     			}
     			else{
-    				throw new Exception();
+    				throw new Exception("Error in Row " + index + ". Geometry must be a LineString");
     			}
 
-				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-				String str = json.toString(p1);
+				String str = Constants.GeometryToGeoJSON(p1, crs);
 				cells1[geomIndex] = new StringCell(str);
 				cells1[geomIndex+1] = new IntCell(1);
 				
-				json = new GeometryJSON(Constants.JsonPrecision);
-				str = json.toString(p2);
+				str = Constants.GeometryToGeoJSON(p2, crs);
 				cells2[geomIndex] = new StringCell(str);
 				cells2[geomIndex+1] = new IntCell(0);
 				for ( int col = 0; col < numberOfColumns; col++ ) {	

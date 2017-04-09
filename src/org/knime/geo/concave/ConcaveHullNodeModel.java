@@ -30,6 +30,10 @@ import org.knime.geoutils.Constants;
 import org.opensphere.geometry.algorithm.ConcaveHull;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 
 /**
  * This is the model implementation of ConcaveHull.
@@ -85,13 +89,28 @@ public class ConcaveHullNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = new GeometryJSON().read(geoJsonString);
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);	
 	    			Geometries geomType = Geometries.get(g);
 	    			if (geomType == Geometries.GEOMETRYCOLLECTION){	    				
 	    				ConcaveHull ch = new ConcaveHull(g, target_percent);
 	    				Geometry geo = ch.getConcaveHull();
-	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-	    				str = json.toString(geo);
+	    				str = Constants.GeometryToGeoJSON(geo, Constants.GetCRS(geoJsonString));
+	    			}
+	    			else if (geomType == Geometries.MULTIPOLYGON){
+	    				MultiPolygon  mp = (MultiPolygon)g;
+	    				Geometry [] geometries = new Geometry[mp.getNumGeometries()];
+	    				for (int j = 0; j < mp.getNumGeometries(); j++ ){
+	    					Polygon poly = (Polygon) mp.getGeometryN(i);
+	    					geometries[j] = poly;
+	    				}		
+	    				GeometryFactory geometryFactory = new GeometryFactory();
+	    				GeometryCollection gc = new GeometryCollection(geometries,geometryFactory);
+	    				ConcaveHull ch = new ConcaveHull(gc, target_percent);
+	    				Geometry geo = ch.getConcaveHull();
+	    				str = Constants.GeometryToGeoJSON(geo, Constants.GetCRS(geoJsonString));
+	    			}
+	    			else{
+	    				throw new Exception("Error in row " + i + ". Must be a GeometryCollection for Concave Hull");
 	    			}
 	    			
 	    			//Geometry geo = g.convexHull();

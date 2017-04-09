@@ -65,11 +65,9 @@ public class CentroidsNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
-    			//UnaryUnionOp.union(geoms)
+    			Geometry geo =  Constants.FeatureToGeometry(geoJsonString);
     			Point p = geo.getCentroid();    			
-				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-				String str = json.toString(p);
+				String str = Constants.GeometryToGeoJSON(p, Constants.GetCRS(geoJsonString));
 				cells[geomIndex] = new StringCell(str);
 				for ( int col = 0; col < numberOfColumns; col++ ) {	
 					if (col != geomIndex ) {

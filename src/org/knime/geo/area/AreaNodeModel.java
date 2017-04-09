@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.geotools.filter.AreaFunction;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -64,8 +65,8 @@ public class AreaNodeModel extends NodeModel {
     		
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
-    			double length = geo.getArea();   	
+    			Geometry geo =  Constants.FeatureToGeometry(geoJsonString);
+    			double length = new AreaFunction().getArea(geo);   	
     			DataCell[] cells = new DataCell[outSpec.getNumColumns()];	
 				cells[outSpec.getNumColumns()-1] = new DoubleCell(length);
 				for ( int col = 0; col < numberOfColumns; col++ ) {	

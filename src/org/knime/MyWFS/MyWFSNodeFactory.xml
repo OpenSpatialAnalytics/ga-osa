@@ -10,8 +10,9 @@
         <intro>Insert long description here...</intro>
         
         
-        <option name="short name of first option (like in the dialog)">description of first option</option>
-        <option name="short name of second option (like in the dialog)">description of second option</option>
+        <option name="WFS connection url">The URL to connect a WFS</option>
+        <option name="Connect button">Click this button to connect the WFS service with desired URL</option>
+        <option name="Select Source">Select a source once connect with desired WFS</option>
         <!-- possibly more options that can also be grouped by tabs -->
         <!--
         <tab name="Standard Options">

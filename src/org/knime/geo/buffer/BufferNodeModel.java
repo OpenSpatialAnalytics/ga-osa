@@ -91,10 +91,10 @@ public class BufferNodeModel extends NodeModel {
     				  	try{
     				  		DataCell geometryCell = row.getCell(geomIndex);
     				  		String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    				  		Geometry geo = new GeometryJSON().read(geoJsonString);
+    				  		String crs = Constants.GetCRS(geoJsonString);
+    				  		Geometry geo = Constants.FeatureToGeometry(geoJsonString);
     				  		Geometry gf = geo.buffer(distance);
-    				  		GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				  		String str = json.toString(gf);
+    				  		String str = Constants.GeometryToGeoJSON(gf, crs);
     				  		cells[geomIndex] = new StringCell(str);
     				  		for ( int col = 0; col < numColumns; col++ ) {
     				  			if (col != geomIndex) {

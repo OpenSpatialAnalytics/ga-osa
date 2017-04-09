@@ -12,6 +12,7 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.geoutils.FeatureGeometry;
 import org.knime.geoutils.ShapeFileFeatureExtractor;
 import org.knime.geoutils.ShapeToKnime;
 import org.knime.core.node.ExecutionContext;
@@ -54,8 +55,10 @@ public class ShapeFileReaderNodeModel extends NodeModel {
         logger.info("Inside Shapefile redeader model");
 
         String fname=shpFile.getStringValue();
-        SimpleFeatureCollection collection = 
-        		ShapeFileFeatureExtractor.getShapeFeature(fname);
+        FeatureGeometry featureGeometry = ShapeFileFeatureExtractor.getShapeFeature(fname);
+        String crs = featureGeometry.crs;
+        SimpleFeatureCollection collection = featureGeometry.collection;
+        		
         
         DataTableSpec outputSpec = ShapeToKnime.createSpec(collection)[0];
        
@@ -63,7 +66,7 @@ public class ShapeFileReaderNodeModel extends NodeModel {
         
         int size = collection.size();
         
-        ArrayList<DataCell []> cellList = ShapeToKnime.createCell(collection);
+        ArrayList<DataCell []> cellList = ShapeToKnime.createCell(crs,collection);
         
     
         for (int i=0; i < cellList.size(); i++ ) {

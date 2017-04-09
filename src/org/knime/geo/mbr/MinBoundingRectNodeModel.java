@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.JTS;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -29,6 +28,7 @@ import org.knime.geoutils.Constants;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
+
 
 /**
  * This is the model implementation of MinBoundingRect.
@@ -71,12 +71,11 @@ public class MinBoundingRectNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = new GeometryJSON().read(geoJsonString);
-	    			  				    			
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);
+	    			String crs = Constants.GetCRS(geoJsonString);  				    			
 	    			Envelope envelope = g.getBoundary().getEnvelopeInternal();
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
 	    			Polygon poly = JTS.toGeometry(envelope);
-    				String str = json.toString(poly);
+    				String str = Constants.GeometryToGeoJSON(poly, crs);
     					
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);

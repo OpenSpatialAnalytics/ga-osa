@@ -91,10 +91,9 @@ public class SnapToGridNodeModel extends NodeModel {
 	    		if (geometryCell instanceof StringValue){
 	    			DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-	    			Geometry geo = new GeometryJSON().read(geoJsonString);
+	    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
 	    			Geometry gp = GeometryPrecisionReducer.reduce(geo, pm);
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-					String str = json.toString(gp);
+					String str = Constants.GeometryToGeoJSON(gp, Constants.GetCRS(geoJsonString));
 					cells[geomIndex] = new StringCell(str);
 					for ( int col = 0; col < numberOfColumns; col++ ) {	
 						if (col != geomIndex ) {

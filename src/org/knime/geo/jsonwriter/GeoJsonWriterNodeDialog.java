@@ -26,11 +26,6 @@ public class GeoJsonWriterNodeDialog extends DefaultNodeSettingsPane {
      */
     protected GeoJsonWriterNodeDialog() {
     	
-    	DialogComponentString projDialog = new DialogComponentString(
-    			new SettingsModelString(GeoJsonWriterNodeModel.PROJ,""), "Projection srid value");
-    	
-    	addDialogComponent(projDialog);
-    	
     	DialogComponentFileChooser outPath = new DialogComponentFileChooser(
   		      new SettingsModelString(GeoJsonWriterNodeModel.CFG_LOC,""),
   		      GeoJsonWriterNodeModel.CFG_LOC,

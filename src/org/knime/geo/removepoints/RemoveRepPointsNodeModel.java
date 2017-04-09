@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -26,7 +25,6 @@ import org.knime.geoutils.Constants;
 import org.knime.geoutils.RemoveRepeatedPoints;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
 
 /**
  * This is the model implementation of RemoveRepPoints.
@@ -65,10 +63,10 @@ public class RemoveRepPointsNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);    			
+    			String crs = Constants.GetCRS(geoJsonString);
+		  		Geometry geo = Constants.FeatureToGeometry(geoJsonString); 			
     			Geometry g = RemoveRepeatedPoints.removeRepeatedPoints(geo);    			
-				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-				String str = json.toString(g);
+				String str = Constants.GeometryToGeoJSON(g, crs);
 				cells[geomIndex] = new StringCell(str);
 				for ( int col = 0; col < numberOfColumns; col++ ) {	
 					if (col != geomIndex ) {

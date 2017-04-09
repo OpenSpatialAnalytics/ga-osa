@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.geometry.jts.JTS;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -31,6 +32,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.geoutils.Constants;
+import org.opengis.referencing.operation.MathTransform;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
@@ -90,6 +92,11 @@ public class CombineNodeModel extends NodeModel {
     	
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	List <Geometry> geometries = new ArrayList <Geometry>();
+    	
+    	DataRow firstRow =  inTable.iterator().next();
+    	String featureStr = ((StringValue) firstRow.getCell(geomIndex)).getStringValue();
+    	String crsJSON = Constants.GetCRS(featureStr);
+    	String crsStr = Constants.GetCRSCode(crsJSON);
         	    	    	    	    	
     	try{    	
  
@@ -100,8 +107,13 @@ public class CombineNodeModel extends NodeModel {
 		    		DataCell geometryCell = r.getCell(geomIndex);
 		    		
 		    		if ( (geometryCell instanceof StringValue) ){
-		    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-		    			Geometry g = new GeometryJSON().read(geoJsonString);
+		    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
+		    			String crsVal = Constants.GetCRSCode(Constants.GetCRS(featureStr));
+		    			Geometry g = Constants.FeatureToGeometry(geoJsonString);
+		    			if (crsStr.compareTo(crsVal) != 0){
+		    				MathTransform transform = Constants.FindMathTransform(crsStr, crsVal);
+		    				g = JTS.transform(g, transform);
+		    			}
 		    			geometries.add(g);			  				    
 		    		}
 		    		
@@ -119,7 +131,8 @@ public class CombineNodeModel extends NodeModel {
 	    		//Geometry geo = GeometryCombiner.combine(geometries);
 		    	GeometryCollection collect = new GeometryCollection((Geometry[]) geometries.toArray(new Geometry[0]),geometryFactory);
     			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-				String str = json.toString(collect);
+				String geoStr = json.toString(collect);
+				String str = Constants.AppendCRS(crsJSON, geoStr);
 				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 				cells[geomIndex] = new StringCell(str);
 				int k = 0;
@@ -165,7 +178,12 @@ public class CombineNodeModel extends NodeModel {
     				
     				if ( (geometryCell instanceof StringValue) ){
 		    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-		    			Geometry g = new GeometryJSON().read(geoJsonString);
+		    			String crsVal = Constants.GetCRSCode(Constants.GetCRS(featureStr));
+		    			Geometry g = Constants.FeatureToGeometry(geoJsonString);
+		    			if (crsStr.compareTo(crsVal) != 0){
+		    				MathTransform transform = Constants.FindMathTransform(crsStr, crsVal);
+		    				g = JTS.transform(g, transform);
+		    			}
 		    			combinedGeometries.get(grpIndex).add(g);	  				    
 		    		}
     				
@@ -185,7 +203,8 @@ public class CombineNodeModel extends NodeModel {
     				GeometryCollection collect = new GeometryCollection((Geometry[]) combinedGeometries.get(i).toArray(new Geometry[0]),geometryFactory);
     				//Geometry geo = geometryFactory.buildGeometry(combinedGeometries.get(i));
     				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				String str = json.toString(collect);
+    				String geoStr = json.toString(collect);
+    				String str = Constants.AppendCRS(crsJSON, geoStr);
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);
     				

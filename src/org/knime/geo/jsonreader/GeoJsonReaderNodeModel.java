@@ -1,14 +1,13 @@
-package org.knime.geo.shapetojson;
+package org.knime.geo.jsonreader;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.geojson.feature.FeatureJSON;
-import org.geotools.geojson.geom.GeometryJSON;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DefaultRow;
@@ -22,35 +21,33 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.geoutils.Constants;
 import org.knime.geoutils.FeatureGeometry;
 import org.knime.geoutils.ShapeFileFeatureExtractor;
 import org.knime.geoutils.ShapeToKnime;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.JsonObject;
 
 /**
- * This is the model implementation of ShapeToGeoJson.
+ * This is the model implementation of GeoJsonReader.
  * 
  *
  * @author Forkan
  */
-public class ShapeToGeoJsonNodeModel extends NodeModel {
+public class GeoJsonReaderNodeModel extends NodeModel {
 	
-	static final String CFG_SHP_FILE = "ShpFile";
-    public final SettingsModelString shpFile = new SettingsModelString(CFG_SHP_FILE,"");
-    static final String CFG_LOC = "FilePath";
-    public final SettingsModelString jsonFileLoc =new SettingsModelString(CFG_LOC,"");
+	 static final String JSON_FILE = "GeoJsonFile";
+	 public final SettingsModelString geoJsonFile = new SettingsModelString(JSON_FILE,"");
+
     
     /**
      * Constructor for the node model.
      */
-    protected ShapeToGeoJsonNodeModel() {
-    
-        super(0, 0);
+    protected GeoJsonReaderNodeModel() {
+        super(0, 1);
     }
 
     /**
@@ -60,31 +57,41 @@ public class ShapeToGeoJsonNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-    	try{
-	    	String fname=shpFile.getStringValue();
-	    	FeatureGeometry featureGeometry = ShapeFileFeatureExtractor.getShapeFeature(fname);
-	        String crs = featureGeometry.crs;
-	        SimpleFeatureCollection collection = featureGeometry.collection;
-	        String writeFname=jsonFileLoc.getStringValue().concat(".geojson");
-	        GeometryJSON gjson = new GeometryJSON(Constants.JsonPrecision);
-    		FeatureJSON io = new FeatureJSON(gjson);
-    		StringWriter s = new StringWriter();
-    		io.writeFeatureCollection(collection, s);
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			JsonParser jp = new JsonParser();
-			JsonElement je = jp.parse(s.toString());
-			String prettyJsonString = gson.toJson(je);
-			FileWriter writer = new FileWriter(writeFname);
-			writer.write(prettyJsonString);
-			writer.close();
-    	}
-    	catch (Exception e)
-		{
-			e.printStackTrace();
-			
-		}
+    	String fname=geoJsonFile.getStringValue();
+    	File jsonFile = new File(fname);
+    	CoordinateReferenceSystem crs = new FeatureJSON().readCRS( new FileInputStream(jsonFile));
+    	StringWriter s = new StringWriter();
+		FeatureJSON io = new FeatureJSON();
+		io.writeCRS(crs, s);
+		Gson gson = new GsonBuilder().create();			
+		JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+		JsonElement entry=job.get("properties");	
+		String crsStr = entry.toString();
         
-        return null;
+        SimpleFeatureCollection collection = (SimpleFeatureCollection) new FeatureJSON().readFeatureCollection(new FileInputStream(jsonFile));
+        		
+        
+        DataTableSpec outputSpec = ShapeToKnime.createSpec(collection)[0];
+       
+        BufferedDataContainer container = exec.createDataContainer(outputSpec);
+        
+        int size = collection.size();
+        
+        ArrayList<DataCell []> cellList = ShapeToKnime.createCell(crsStr,collection);
+        
+    
+        for (int i=0; i < cellList.size(); i++ ) {
+            int index = i + 1;
+            DataCell[] cells = cellList.get(i);
+            container.addRowToTable(new DefaultRow("Row"+index, cells));
+            exec.checkCanceled();
+            exec.setProgress(index / (double)size, "Adding row " + index);
+        }
+        
+        // once we are done, we close the container and return its table
+        container.close();
+        BufferedDataTable out = container.getTable();
+        return new BufferedDataTable[]{out};
     }
 
     /**
@@ -102,14 +109,9 @@ public class ShapeToGeoJsonNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
-    	if (shpFile.getStringValue() == null) {
-			throw new InvalidSettingsException("No shape file name specified");
-		}
-    	
-    	if (jsonFileLoc.getStringValue() == null) {
+    	if (geoJsonFile.getStringValue() == null) {
 			throw new InvalidSettingsException("No GeoJSON file name specified");
 		}
-    	
     	
         return new DataTableSpec[]{null};
     }
@@ -119,9 +121,7 @@ public class ShapeToGeoJsonNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-         // TODO: generated method stub
-    	this.shpFile.saveSettingsTo(settings);
-    	this.jsonFileLoc.saveSettingsTo(settings);
+    	geoJsonFile.saveSettingsTo(settings);
     }
 
     /**
@@ -130,10 +130,7 @@ public class ShapeToGeoJsonNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO: generated method stub
-    	
-    	this.shpFile.loadSettingsFrom(settings);
-    	this.jsonFileLoc.loadSettingsFrom(settings);
+    	geoJsonFile.loadSettingsFrom(settings);
     }
 
     /**
@@ -142,8 +139,7 @@ public class ShapeToGeoJsonNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-    	this.shpFile.validateSettings(settings);
-    	this.jsonFileLoc.validateSettings(settings);
+    	geoJsonFile.validateSettings(settings);
     }
     
     /**

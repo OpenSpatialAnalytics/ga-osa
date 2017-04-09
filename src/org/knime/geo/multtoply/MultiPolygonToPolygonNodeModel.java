@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.Geometries;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -73,14 +72,14 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    		
 	    		if (geometryCell instanceof StringValue){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-	    			Geometry geo = new GeometryJSON().read(geoJsonString);
+	    			String crs = Constants.GetCRS(geoJsonString);
+	    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
 	    			Geometries geomType = Geometries.get(geo);	    			
 	    			if (geomType == Geometries.MULTIPOLYGON){	
 	    				MultiPolygon  mp = (MultiPolygon)geo;
 	    				for (int i = 0; i < mp.getNumGeometries(); i++ ){
 	    					Polygon poly = (Polygon) mp.getGeometryN(i);	    					
-	    					GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-	    					String str = json.toString(poly);
+	    					String str = Constants.GeometryToGeoJSON(poly, crs);
 	    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];	
 	    					cells[geomIndex] = new StringCell(str);
 	    					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -96,8 +95,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    			}
 	    			else if(geomType == Geometries.POLYGON) {
 	    				Polygon poly = (Polygon)geo;	    				
-	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    					String str = json.toString(poly);
+	    				String str = Constants.GeometryToGeoJSON(poly, crs);
     					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     					cells[geomIndex] = new StringCell(str);
     					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -114,8 +112,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    				MultiLineString  ml = (MultiLineString)geo;
 	    				for (int i = 0; i < ml.getNumGeometries(); i++ ){
 	    					LineString line = (LineString) ml.getGeometryN(i);	    					
-	    					GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-	    					String str = json.toString(line);
+	    					String str = Constants.GeometryToGeoJSON(line, crs);
 	    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];	
 	    					cells[geomIndex] = new StringCell(str);
 	    					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -131,8 +128,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    			}
 	    			else if(geomType == Geometries.LINESTRING) {
 	    				LineString line = (LineString)geo;	    				
-	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    					String str = json.toString(line);
+	    				String str = Constants.GeometryToGeoJSON(line, crs);
     					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     					cells[geomIndex] = new StringCell(str);
     					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -149,8 +145,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    				MultiPoint  mp = (MultiPoint)geo;
 	    				for (int i = 0; i < mp.getNumGeometries(); i++ ){
 	    					Point point = (Point) mp.getGeometryN(i);	    					
-	    					GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-	    					String str = json.toString(point);
+	    					String str = Constants.GeometryToGeoJSON(point, crs);
 	    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 	    					cells[geomIndex] = new StringCell(str);
 	    					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -166,8 +161,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    			}
 	    			else if(geomType == Geometries.POINT) {
 	    				Point point = (Point)geo;	    				
-	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    					String str = json.toString(point);
+    					String str = Constants.GeometryToGeoJSON(point, crs);
     					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     					cells[geomIndex] = new StringCell(str);
     					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -187,8 +181,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    					Geometries gtype = Geometries.get(g);
 	    					if(gtype==Geometries.MULTIPOLYGON ||gtype==Geometries.MULTILINESTRING || gtype==Geometries.MULTIPOINT){
 	    						for (int j = 0; j < geo.getNumGeometries(); j++ ){
-	    							GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-	    	    					String str = json.toString(g.getGeometryN(i));
+	    	    					String str = Constants.GeometryToGeoJSON(g.getGeometryN(i), crs);
 	    	    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 	    	    					cells[geomIndex] = new StringCell(str);
 	    	    					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -203,8 +196,7 @@ public class MultiPolygonToPolygonNodeModel extends NodeModel {
 	    						}
 	    					}
 	    					else{
-	    						GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-		    					String str = json.toString(g);
+		    					String str = Constants.GeometryToGeoJSON(g, crs);
 		    					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 		    					cells[geomIndex] = new StringCell(str);
 		    					for ( int col = 0; col < numberOfColumns; col++ ) {	

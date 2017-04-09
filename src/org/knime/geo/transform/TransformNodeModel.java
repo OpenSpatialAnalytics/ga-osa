@@ -45,13 +45,10 @@ import com.vividsolutions.jts.geom.PrecisionModel;
  */
 public class TransformNodeModel extends NodeModel {
     
-	 static final String SRC_SRS = "src_srid";
+	 //static final String SRC_SRS = "src_srid";
 	 static final String DEST_SRS = "dest_srid";
-	 
-	 public final SettingsModelString srcSRID =
-		        new SettingsModelString(SRC_SRS,"");
-	 public final SettingsModelString destSRID =
-		        new SettingsModelString(DEST_SRS,"");
+	 //public final SettingsModelString srcSRID = new SettingsModelString(SRC_SRS,"");
+	 public final SettingsModelString destSRID = new SettingsModelString(DEST_SRS,"");
 	
 	
     /**
@@ -76,10 +73,16 @@ public class TransformNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec(inTable.getSpec());
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
+    	DataRow firstRow =  inTable.iterator().next();
+    	DataCell firstCell = firstRow.getCell(geomIndex);
+    	String featureStr = ((StringValue) firstCell).getStringValue();
+    	
     	RowIterator ri = inTable.iterator();
     	
-    	CoordinateReferenceSystem srcCRS = CRS.decode("EPSG:"+srcSRID.getStringValue());
+    	//CoordinateReferenceSystem srcCRS = CRS.decode("EPSG:"+srcSRID.getStringValue());
     	//CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:"+destSRID.getStringValue());
+    	
+    	CoordinateReferenceSystem srcCRS = CRS.decode(Constants.GetCRSCode(Constants.GetCRS(featureStr)));
     	
     	Hints hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
     	CRSAuthorityFactory factory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", hints);
@@ -87,6 +90,7 @@ public class TransformNodeModel extends NodeModel {
     	
     	//CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("urn:y-ogc:def:crs:EPSG:"+destSRID.getStringValue());    	
     	MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);
+    	String targetCrsJSON = Constants.GetCrsJson(destSRID.getStringValue());
         	    	    	    	    	
     	try{    	
 	    	for (int i = 0; i < inTable.size(); i++ ) {
@@ -97,11 +101,9 @@ public class TransformNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = new GeometryJSON().read(geoJsonString);		  				    			
-	    			Geometry geo = JTS.transform(g, transform);
-	    				    				    			
-	    			GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    				String str = json.toString(geo);
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);		  				    			
+	    			Geometry geo = JTS.transform(g, transform);				    			
+    				String str = Constants.GeometryToGeoJSON(geo, targetCrsJSON);
     					
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);
@@ -143,10 +145,6 @@ public class TransformNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
-    	if (srcSRID.getStringValue() == null) {
-			throw new InvalidSettingsException("You must have a source srid number for projection");
-		}
-    	
     	if (destSRID.getStringValue() == null) {
 			throw new InvalidSettingsException("You must have a destination srid number for projection");
 		}
@@ -159,8 +157,6 @@ public class TransformNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-         // TODO: generated method stub
-    	srcSRID.saveSettingsTo(settings);
     	destSRID.saveSettingsTo(settings);
     }
 
@@ -170,8 +166,6 @@ public class TransformNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO: generated method stub
-    	srcSRID.loadSettingsFrom(settings);
     	destSRID.loadSettingsFrom(settings);
     }
 
@@ -181,8 +175,6 @@ public class TransformNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO: generated method stub
-    	srcSRID.validateSettings(settings);
     	destSRID.validateSettings(settings);
     }
     
@@ -193,7 +185,7 @@ public class TransformNodeModel extends NodeModel {
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
+      
     }
     
     /**
@@ -203,7 +195,7 @@ public class TransformNodeModel extends NodeModel {
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
+       
     }
     
     private static DataTableSpec createSpec(DataTableSpec inSpec) throws InvalidSettingsException {

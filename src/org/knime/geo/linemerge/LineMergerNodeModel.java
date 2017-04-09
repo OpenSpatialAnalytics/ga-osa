@@ -67,13 +67,12 @@ public class LineMergerNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
+    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
     			LineMerger merger = new LineMerger();
 				merger.add(geo);
 				Collection lines = merger.getMergedLineStrings();
 				Geometry g =  geo.getFactory().buildGeometry(lines);	
-				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-				String str = json.toString(g);
+				String str = Constants.GeometryToGeoJSON(g, Constants.GetCRS(geoJsonString));
 				cells[geomIndex] = new StringCell(str);
 				for ( int col = 0; col < numberOfColumns; col++ ) {	
 					if (col != geomIndex ) {

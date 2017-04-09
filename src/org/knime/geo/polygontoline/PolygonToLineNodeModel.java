@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.Geometries;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -80,7 +79,8 @@ public class PolygonToLineNodeModel extends NodeModel {
 	    		
 	    		if (geometryCell instanceof StringValue){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-	    			Geometry geo = new GeometryJSON().read(geoJsonString);
+	    			String crs = Constants.GetCRS(geoJsonString);
+	    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
 	    			Geometries geomType = Geometries.get(geo);	    			
 	    			if (geomType == Geometries.MULTIPOLYGON){	
 	    				MultiPolygon  mp = (MultiPolygon)geo;
@@ -92,8 +92,7 @@ public class PolygonToLineNodeModel extends NodeModel {
 	    				}		
 	    				
 	    				MultiLineString ms = new GeometryFactory().createMultiLineString(lineStrings);
-	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    					String str = json.toString(ms);
+    					String str = Constants.GeometryToGeoJSON(ms, crs);
     					cells[geomIndex] = new StringCell(str);
     					for ( int col = 0; col < numberOfColumns; col++ ) {	
     						if (col != geomIndex ) {
@@ -104,8 +103,7 @@ public class PolygonToLineNodeModel extends NodeModel {
 	    			else if(geomType == Geometries.POLYGON) {
 	    				Polygon poly = (Polygon)geo;
 	    				LineString linestring = poly.getExteriorRing();	
-	    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-    					String str = json.toString(linestring);
+    					String str = Constants.GeometryToGeoJSON(linestring, crs);
     					cells[geomIndex] = new StringCell(str);
     					for ( int col = 0; col < numberOfColumns; col++ ) {	
     						if (col != geomIndex ) {

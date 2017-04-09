@@ -8,11 +8,12 @@
     
     <fullDescription>
         <intro>This node writes out the input data table into an ESRI <a href="https://www.esri.com/library/whitepapers/pdfs/shapefile.pdf">shapefile</a> denoted by a destination location. 
-        A projection A spatial reference identifier <a href="http://desktop.arcgis.com/en/arcmap/10.3/manage-data/using-sql-with-gdbs/what-is-an-srid.htm">(SRID) value</a> is also required to write the shape file.
-        The input table must contain a geometry column ("the_geom") in GeoJSON format. A map view option of the shapefile is also available for this node.
+        The input table must contain a geometry column ("the_geom") in GeoJSON format. 
+        A projection spatial reference identifier <a href="http://desktop.arcgis.com/en/arcmap/10.3/manage-data/using-sql-with-gdbs/what-is-an-srid.htm">(SRID) value</a> is used from CRS value in GeoJSON.
+        A map view option of the shapefile is also available for this node.
         </intro>
                 
-        <option name="SRID value">a single coordinate system value (e.g. SRID 4326) for WGS84</option>
+<!--         <option name="SRID value">a single coordinate system value (e.g. SRID 4326) for WGS84</option> -->
         <option name="Output Shapefile">Enter a valid file name with or without ".shp" extension. 
         You can select a location from the "Browse..." dialog and then type your desired filename after the location 
 		</option>

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.geometry.jts.JTS;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -25,6 +26,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.geoutils.Constants;
+import org.opengis.referencing.operation.MathTransform;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -35,6 +37,9 @@ import com.vividsolutions.jts.geom.Geometry;
  * @author Forkan
  */
 public class DistanceNodeModel extends NodeModel {
+	
+	private boolean needTransform = false;
+	private MathTransform transform = null;
     
     /**
      * Constructor for the node model.
@@ -70,6 +75,19 @@ public class DistanceNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec(inTable.getSpec());
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
+    	DataRow firstRow =  inTable.iterator().next();
+    	String featureStr1 = ((StringValue) firstRow.getCell(geomIndexs[0])).getStringValue();
+    	String featureStr2 = ((StringValue) firstRow.getCell(geomIndexs[1])).getStringValue();
+    	
+    	String crsJSON = Constants.GetCRS(featureStr1);
+    	String crsStr1 = Constants.GetCRSCode(crsJSON);
+    	String crsStr2 = Constants.GetCRSCode(Constants.GetCRS(featureStr2));
+    	
+    	if (crsStr1.compareTo(crsStr2) != 0){
+    		transform = Constants.FindMathTransform(crsStr1, crsStr2);
+    		needTransform = true;
+    	}
+    	
     	RowIterator ri = inTable.iterator();
     	
     	int index = 0;
@@ -82,9 +100,11 @@ public class DistanceNodeModel extends NodeModel {
     		
     		if ( (geometryCell1 instanceof StringValue) && (geometryCell2 instanceof StringValue) ){
     			String geoJsonString1 = ((StringValue) geometryCell1).getStringValue();	    			
-    			Geometry geo1 = new GeometryJSON().read(geoJsonString1);
+    			Geometry geo1 = Constants.FeatureToGeometry(geoJsonString1);
     			String geoJsonString2 = ((StringValue) geometryCell2).getStringValue();	    			
-    			Geometry geo2 = new GeometryJSON().read(geoJsonString2);
+    			Geometry geo2 = Constants.FeatureToGeometry(geoJsonString2);	  
+    			if (needTransform)
+    				geo2 = JTS.transform(geo2, transform);
     			double distance = geo1.distance(geo2);		
     			DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 				cells[outSpec.getNumColumns()-1] = new DoubleCell(distance);	

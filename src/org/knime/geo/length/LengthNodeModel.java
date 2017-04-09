@@ -67,7 +67,7 @@ public class LengthNodeModel extends NodeModel {
     		DataCell geometryCell = row.getCell(geomIndex);
     		if (geometryCell instanceof StringValue){
     			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-    			Geometry geo = new GeometryJSON().read(geoJsonString);
+    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
     			double length = geo.getLength();   			
 				cells[outSpec.getNumColumns()-1] = new DoubleCell(length);
 				for ( int col = 0; col < numberOfColumns; col++ ) {	

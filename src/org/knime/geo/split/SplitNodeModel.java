@@ -5,16 +5,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.geotools.geojson.geom.GeometryJSON;
+import org.geotools.geometry.jts.JTS;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -27,6 +25,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.geoutils.Constants;
 import org.knime.geoutils.Split;
+import org.opengis.referencing.operation.MathTransform;
+
 import com.vividsolutions.jts.geom.Geometry;
 
 /**
@@ -36,6 +36,9 @@ import com.vividsolutions.jts.geom.Geometry;
  * @author Forkan
  */
 public class SplitNodeModel extends NodeModel {
+	
+	private boolean needTransform = false;
+	private MathTransform transform = null;
     
     /**
      * Constructor for the node model.
@@ -71,6 +74,19 @@ public class SplitNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec(inTable.getSpec(), geomIndexs);
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
+    	DataRow firstRow =  inTable.iterator().next();
+    	String featureStr1 = ((StringValue) firstRow.getCell(geomIndexs[0])).getStringValue();
+    	String featureStr2 = ((StringValue) firstRow.getCell(geomIndexs[1])).getStringValue();
+    	
+    	String crsJSON = Constants.GetCRS(featureStr1);
+    	String crsStr1 = Constants.GetCRSCode(crsJSON);
+    	String crsStr2 = Constants.GetCRSCode(Constants.GetCRS(featureStr2));
+    	
+    	if (crsStr1.compareTo(crsStr2) != 0){
+    		transform = Constants.FindMathTransform(crsStr1, crsStr2);
+    		needTransform = true;
+    	}
+    	
     
     	RowIterator ri = inTable.iterator();
   
@@ -86,12 +102,13 @@ public class SplitNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell1 instanceof StringValue) && (geometryCell2 instanceof StringValue) ){
 	    			String geoJsonString1 = ((StringValue) geometryCell1).getStringValue();	    			
-	    			Geometry geo1 = new GeometryJSON().read(geoJsonString1);
+	    			Geometry geo1 = Constants.FeatureToGeometry(geoJsonString1);
 	    			String geoJsonString2 = ((StringValue) geometryCell2).getStringValue();	    			
-	    			Geometry geo2 = new GeometryJSON().read(geoJsonString2);	    				    			
+	    			Geometry geo2 = Constants.FeatureToGeometry(geoJsonString2);	    				    			
     				Geometry geo = Split.split(geo1, geo2);
-    				GeometryJSON json = new GeometryJSON(Constants.JsonPrecision);
-					String str = json.toString(geo);
+    				if (needTransform)
+	    				geo2 = JTS.transform(geo2, transform);
+					String str = Constants.GeometryToGeoJSON(geo, crsJSON);
 					
 					DataCell[] cells = new DataCell[outSpec.getNumColumns()];
 					

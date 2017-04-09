@@ -30,6 +30,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.gdalutils.Utility;
 import org.knime.geoutils.Constants;
+import org.knime.geoutils.FeatureGeometry;
 import org.knime.geoutils.ShapeFileFeatureExtractor;
 import org.knime.geoutils.WriteShapefile;
 import org.opengis.feature.simple.SimpleFeature;
@@ -49,8 +50,7 @@ import com.vividsolutions.jts.precision.GeometryPrecisionReducer;
 public class ShapeMergeNodeModel extends NodeModel {
     
 	 static final String FILE_LOC = "filepath";
-	 public final SettingsModelString shpFileLoc =
-		        new SettingsModelString(FILE_LOC,"");
+	 public final SettingsModelString shpFileLoc = new SettingsModelString(FILE_LOC,"");
 	
 	
     /**
@@ -83,8 +83,9 @@ public class ShapeMergeNodeModel extends NodeModel {
 		String shpFile = Utility.MergeShapeFiles(shapeFiles);
     	
 		
-		SimpleFeatureCollection collection = 
-	        		ShapeFileFeatureExtractor.getShapeFeature(shpFile);
+		 FeatureGeometry featureGeometry = ShapeFileFeatureExtractor.getShapeFeature(shpFile);
+	     String crs = featureGeometry.crs;
+	     SimpleFeatureCollection collection = featureGeometry.collection;
 		
 		SimpleFeatureType type = collection.getSchema();
 		

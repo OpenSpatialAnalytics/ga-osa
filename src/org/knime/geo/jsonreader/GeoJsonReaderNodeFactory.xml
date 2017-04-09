@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<knimeNode icon="./jsonwrite.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
-    <name>GeoJSON Writer</name>
+<knimeNode icon="./jsonread.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+    <name>GeoJSON Reader</name>
     
     <shortDescription>
-         Write a GeoJSON file
+         Read geometries from a GeoJSON file
     </shortDescription>
     
     <fullDescription>
         <intro>
-        This node writes out the input data table into a  <a href="http://geojson.org/">GeoJSON file</a> denoted by a destination location. 
-        The input table must contain a geometry column ("the_geom") in GeoJSON format along with CRS code. 
+        This node reads a <a href="http://geojson.org/">GeoJSON file</a> denoted by a source location and 
+        then generate an output table containing list of geometries and other non-spatial attributes in the file. 
+        The output table contains a geometry column ("the_geom") in GeoJSON format.
         </intro>
         
         
-        <option name="Output Shapefile">Enter a valid file name with or without ".geojson" extension. 
-        You can select a location from the "Browse..." dialog and then type your desired filename after the location 
-		</option>
+        <option name="Source GeoJSON file">Location or URL of the GeoJSON file to read</option>
         <!-- possibly more options that can also be grouped by tabs -->
         <!--
         <tab name="Standard Options">
@@ -29,9 +28,10 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Geometry Table">Input table with a Geomerty column</inPort>
+        <!--inPort index="0" name="In-Port name">Description of first input port...</inPort-->
         <!-- possibly more input ports here-->
-         <!-- outPort index="0" name="Out-Port name">Description of first output port...</outPort> -->
+        <outPort index="0" name="Geometry Table">Output table with a geometry column ("the_geom") in GeoJSON format and other 
+        non-spatial attributes in the GeoJSON file</outPort>
         <!-- possibly more output ports here-->
     </ports>    
     <views>
