@@ -97,7 +97,7 @@ public class GeoMapViewerNodeModel extends NodeModel {
 
     		for (DataRow row : geometryTable) {
     			
-	    		DataCell geometryCell = row.getCell(0);
+	    		DataCell geometryCell = row.getCell(geomIndex);
 	    		
 	    		if (geometryCell instanceof StringValue){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();

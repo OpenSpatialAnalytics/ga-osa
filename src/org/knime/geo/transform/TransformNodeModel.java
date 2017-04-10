@@ -73,23 +73,17 @@ public class TransformNodeModel extends NodeModel {
     	DataTableSpec outSpec = createSpec(inTable.getSpec());
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
-    	DataRow firstRow =  inTable.iterator().next();
-    	DataCell firstCell = firstRow.getCell(geomIndex);
-    	String featureStr = ((StringValue) firstCell).getStringValue();
-    	
     	RowIterator ri = inTable.iterator();
-    	
-    	//CoordinateReferenceSystem srcCRS = CRS.decode("EPSG:"+srcSRID.getStringValue());
-    	//CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:"+destSRID.getStringValue());
-    	
-    	CoordinateReferenceSystem srcCRS = CRS.decode(Constants.GetCRSCode(Constants.GetCRS(featureStr)));
+    
     	
     	Hints hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
     	CRSAuthorityFactory factory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", hints);
     	CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("EPSG:"+destSRID.getStringValue());
     	
+    	
     	//CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("urn:y-ogc:def:crs:EPSG:"+destSRID.getStringValue());    	
-    	MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);
+    	//CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:"+destSRID.getStringValue());
+    	
     	String targetCrsJSON = Constants.GetCrsJson(destSRID.getStringValue());
         	    	    	    	    	
     	try{    	
@@ -98,13 +92,13 @@ public class TransformNodeModel extends NodeModel {
 	    		DataRow r = ri.next();				    		
 	    		DataCell geometryCell = r.getCell(geomIndex);
 	    		
-	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);		  				    			
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);		  	
+	    			CoordinateReferenceSystem srcCRS = CRS.decode(Constants.GetCRSCode(Constants.GetCRS(geoJsonString)));
+	    			MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);
 	    			Geometry geo = JTS.transform(g, transform);				    			
     				String str = Constants.GeometryToGeoJSON(geo, targetCrsJSON);
-    					
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
     				cells[geomIndex] = new StringCell(str);
     					

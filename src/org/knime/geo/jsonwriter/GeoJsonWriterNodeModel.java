@@ -22,6 +22,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -111,7 +112,7 @@ public class GeoJsonWriterNodeModel extends NodeModel {
 		}
     	
     	String fname1 = fname.replace("\\", "/");
-    	String typeDef = fname1.substring(fname1.lastIndexOf("/"),fname1.indexOf(".shp"));
+    	String typeDef = fname1.substring(fname1.lastIndexOf("/"),fname1.indexOf(".geojson"));
     	
     	SimpleFeatureType schemaDef = DataUtilities.createType(typeDef,schema);
 		
@@ -125,7 +126,7 @@ public class GeoJsonWriterNodeModel extends NodeModel {
 	    		
 	    		if (geometryCell instanceof StringValue){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();
-	    			Geometry geo = new GeometryJSON().read(geoJsonString);
+	    			Geometry geo = Constants.FeatureToGeometry(geoJsonString);
 	    			SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(schemaDef);
 					featureBuilder.add(geo);
 					for ( int col = 0; col < numberOfColumns; col++ ) {	
@@ -139,6 +140,8 @@ public class GeoJsonWriterNodeModel extends NodeModel {
 								featureBuilder.add(((DoubleValue) cell).getDoubleValue());
 							else if (cell instanceof BooleanValue)
 								featureBuilder.add(((BooleanValue) cell).getBooleanValue());
+							else if (cell instanceof MissingCell)
+								featureBuilder.add(DataType.getMissingCell());
 							else
 								featureBuilder.add( ((StringValue) cell).getStringValue());
 						}
