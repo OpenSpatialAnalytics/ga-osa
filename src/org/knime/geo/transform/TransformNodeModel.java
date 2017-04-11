@@ -74,16 +74,18 @@ public class TransformNodeModel extends NodeModel {
     	BufferedDataContainer container = exec.createDataContainer(outSpec);
     	
     	RowIterator ri = inTable.iterator();
-    
+    	
+    	//CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("urn:y-ogc:def:crs:EPSG:"+destSRID.getStringValue());
+    	CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:"+destSRID.getStringValue());
+ 
     	
     	Hints hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
     	CRSAuthorityFactory factory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", hints);
-    	CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("EPSG:"+destSRID.getStringValue());
     	
-    	
-    	//CoordinateReferenceSystem targetCRS = factory.createCoordinateReferenceSystem("urn:y-ogc:def:crs:EPSG:"+destSRID.getStringValue());    	
-    	//CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:"+destSRID.getStringValue());
-    	
+    	if (CRS.getAxisOrder(targetCRS) == CRS.AxisOrder.NORTH_EAST || CRS.getAxisOrder(targetCRS) == CRS.AxisOrder.LAT_LON){
+    		targetCRS = factory.createCoordinateReferenceSystem("EPSG:"+destSRID.getStringValue());    		
+    	}
+    	    	   	
     	String targetCrsJSON = Constants.GetCrsJson(destSRID.getStringValue());
         	    	    	    	    	
     	try{    	
@@ -94,9 +96,13 @@ public class TransformNodeModel extends NodeModel {
 	    		
 	    		if ( (geometryCell instanceof StringValue) ){
 	    			String geoJsonString = ((StringValue) geometryCell).getStringValue();	    			
-	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);		  	
-	    			CoordinateReferenceSystem srcCRS = CRS.decode(Constants.GetCRSCode(Constants.GetCRS(geoJsonString)));
-	    			MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);
+	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);
+	    			String scrCrsCode = Constants.GetCRSCode(Constants.GetCRS(geoJsonString));
+	    			CoordinateReferenceSystem srcCRS = CRS.decode(scrCrsCode);	    			
+    				if (CRS.getAxisOrder(srcCRS) == CRS.AxisOrder.NORTH_EAST || CRS.getAxisOrder(srcCRS) == CRS.AxisOrder.LAT_LON){
+    					srcCRS = factory.createCoordinateReferenceSystem(scrCrsCode);
+    				}	       				
+	    			MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);	    			
 	    			Geometry geo = JTS.transform(g, transform);				    			
     				String str = Constants.GeometryToGeoJSON(geo, targetCrsJSON);
     				DataCell[] cells = new DataCell[outSpec.getNumColumns()];

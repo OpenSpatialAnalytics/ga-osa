@@ -2,10 +2,13 @@ package org.knime.geoutils;
 
 import java.io.IOException;
 
+import org.geotools.factory.Hints;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.referencing.CRS;
+import org.geotools.referencing.ReferencingFactoryFinder;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
+import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 
@@ -127,7 +130,16 @@ public class Constants {
 	public static MathTransform FindMathTransform(String crsStr1, String crsStr2) throws NoSuchAuthorityCodeException, FactoryException 
 	{
 		CoordinateReferenceSystem srcCRS = CRS.decode(crsStr2);
-		CoordinateReferenceSystem targetCRS = CRS.decode(crsStr1);
+		CoordinateReferenceSystem targetCRS = CRS.decode(crsStr1);				 
+		
+		Hints hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
+    	CRSAuthorityFactory factory = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", hints);    	
+    	if (CRS.getAxisOrder(targetCRS) == CRS.AxisOrder.NORTH_EAST || CRS.getAxisOrder(targetCRS) == CRS.AxisOrder.LAT_LON){	
+    		targetCRS = factory.createCoordinateReferenceSystem(crsStr1);
+    	}    	    	
+    	if (CRS.getAxisOrder(srcCRS) == CRS.AxisOrder.NORTH_EAST || CRS.getAxisOrder(srcCRS) == CRS.AxisOrder.LAT_LON){		
+			srcCRS = factory.createCoordinateReferenceSystem(crsStr2);
+		}						
 		MathTransform transform = CRS.findMathTransform(srcCRS, targetCRS, true);
 		return transform;
 	}
