@@ -167,7 +167,7 @@ public class ShapeFileFeatureExtractor {
 	}
 	
 	
-	public static FeatureGeometry getShapeFeature(WFSDataStore dataStore, String typeName)
+	public static FeatureGeometry getShapeFeature(DataStore dataStore, String typeName)
 	{
 		SimpleFeatureCollection collection;
 		

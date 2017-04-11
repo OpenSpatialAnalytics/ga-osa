@@ -11,6 +11,8 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 
 import org.geotools.data.DataStoreFinder;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.wfs.WFSDataStore;
 import org.geotools.data.wfs.WFSDataStoreFactory;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -21,6 +23,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.geoutils.Constants;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 /**
  * <code>NodeDialog</code> for the "MyWFS" Node.
@@ -68,14 +72,17 @@ public class MyWFSNodeDialog extends DefaultNodeSettingsPane {
 			        
 			        getCapabilities += "?REQUEST=GetCapabilities&version=1.0.0";					
 			        Map connectionParameters = new HashMap();					
-					connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities);					
-					WFSDataStoreFactory  dsf = new WFSDataStoreFactory();
-					String strtmp = "";
+					connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities);
+					connectionParameters.put("WFSDataStoreFactory:MAXFEATURES", Integer.MAX_VALUE);
+					//WFSDataStoreFactory  dsf = new WFSDataStoreFactory();
+					//String strtmp = "";
 					  try {
-						  MyWFSNodeModel.dataStore = dsf.createDataStore(connectionParameters);					
+						  MyWFSNodeModel.dataStore = DataStoreFinder.getDataStore(connectionParameters);				
 						  MyWFSNodeModel.m_blconnect=true;
-					      String typeNames[] = MyWFSNodeModel.dataStore.getTypeNames();
-					      for (int i = 0; i < typeNames.length; i++) {
+					      String typeNames[] = MyWFSNodeModel.dataStore.getTypeNames();					      
+					      for (int i = 0; i < typeNames.length; i++) {					    	  
+					    	  //SimpleFeatureSource featureSource = MyWFSNodeModel.dataStore.getFeatureSource(typeNames[i]);					    	  					    	  
+					    	  //System.out.println(featureSource.getName());					    	  
 					    	  strc.add(typeNames[i]);												    	
 					      }   					      
 					      dlgcombox.replaceListItems(strc, selStr.getStringValue());					      					      

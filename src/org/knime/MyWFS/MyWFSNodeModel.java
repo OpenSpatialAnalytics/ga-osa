@@ -80,7 +80,8 @@ public class MyWFSNodeModel extends NodeModel {
     static final String CFGKEY_STRSEL = "selected_source";
     private final SettingsModelString m_wfs_url= new SettingsModelString(CFGKEY_WFS_URL,Constants.localWFS);
     final SettingsModelString m_selStr = new SettingsModelString(CFGKEY_STRSEL, "");
-    static WFSDataStore dataStore = null;
+    static DataStore dataStore = null; 
+    //static WFSDataStore dataStore = null;
     static SimpleFeatureCollection featurescollec = null;
     static boolean m_blconnect =false;
     /**
