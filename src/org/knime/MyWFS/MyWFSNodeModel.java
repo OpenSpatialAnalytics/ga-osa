@@ -81,9 +81,7 @@ public class MyWFSNodeModel extends NodeModel {
     private final SettingsModelString m_wfs_url= new SettingsModelString(CFGKEY_WFS_URL,Constants.localWFS);
     final SettingsModelString m_selStr = new SettingsModelString(CFGKEY_STRSEL, "");
     static DataStore dataStore = null; 
-    //static WFSDataStore dataStore = null;
-    static SimpleFeatureCollection featurescollec = null;
-    static boolean m_blconnect =false;
+    static boolean m_blconnect = false;
     /**
      * Constructor for the node model.
      */
@@ -131,13 +129,14 @@ public class MyWFSNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void reset() {      
+    protected void reset() {          	
     	if (m_blconnect) {
-    		if (m_selStr.getStringValue() != null || m_selStr.getStringValue() != "")
-    			m_blconnect = false;
+    		if (m_selStr.getStringValue() == null || m_selStr.getStringValue() == ""){
+    			m_blconnect = false;    		
+    		}
 		}
     	else {
-    		m_blconnect = true;
+    		m_blconnect = true;    		
 		}
 		
     	

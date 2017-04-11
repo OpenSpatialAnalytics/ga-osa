@@ -46,15 +46,19 @@ public class MyWFSNodeDialog extends DefaultNodeSettingsPane {
      */
     protected MyWFSNodeDialog() {
         super();
+        
         SettingsModelString wfs_url = new SettingsModelString(MyWFSNodeModel.CFGKEY_WFS_URL,Constants.localWFS);
         addDialogComponent(new DialogComponentString(wfs_url,"WFS connection url:"));
+        
         DialogComponentButton mButton=new DialogComponentButton("Connect");
         addDialogComponent(mButton);
+        
         SettingsModelString selStr = new SettingsModelString(MyWFSNodeModel.CFGKEY_STRSEL, "");
         DialogComponentStringSelection dlgcombox = new DialogComponentStringSelection(
         		selStr,       //select the first one
 		        "Select Source","none");
-        addDialogComponent(dlgcombox);	
+        addDialogComponent(dlgcombox);
+        
         Collection<String> strc = new ArrayList<String>();
         
         mButton.addActionListener(new ActionListener() {
@@ -80,15 +84,13 @@ public class MyWFSNodeDialog extends DefaultNodeSettingsPane {
 						  MyWFSNodeModel.dataStore = DataStoreFinder.getDataStore(connectionParameters);				
 						  MyWFSNodeModel.m_blconnect=true;
 					      String typeNames[] = MyWFSNodeModel.dataStore.getTypeNames();					      
-					      for (int i = 0; i < typeNames.length; i++) {					    	  
-					    	  //SimpleFeatureSource featureSource = MyWFSNodeModel.dataStore.getFeatureSource(typeNames[i]);					    	  					    	  
-					    	  //System.out.println(featureSource.getName());					    	  
+					      for (int i = 0; i < typeNames.length; i++) {					    	  					    	  					    	  
 					    	  strc.add(typeNames[i]);												    	
 					      }   					      
 					      dlgcombox.replaceListItems(strc, selStr.getStringValue());					      					      
 					  }
 					  catch (IOException ex) {
-						  MyWFSNodeModel.m_blconnect = false;
+						  //MyWFSNodeModel.m_blconnect = false;
 					      ex.printStackTrace();
 					  }
 					  

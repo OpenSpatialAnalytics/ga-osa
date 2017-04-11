@@ -7,7 +7,7 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>Insert long description here...</intro>
+        <intro>This node connects to a WFS service and user can select a source from there.</intro>
         
         
         <option name="WFS connection url">The URL to connect a WFS</option>
@@ -28,11 +28,11 @@
     <ports>
         <!-- <inPort index="0" name="In-Port name">Description of first input port...</inPort> -->
         <!-- possibly more input ports here-->
-        <outPort index="0" name="WFS Data">Description of first output port...</outPort>
+        <outPort index="0" name="WFS Data">Output table with a Geomerty column</outPort>
         <!-- possibly more output ports here-->
     </ports>    
     <views>
-        <view index="0" name="WFS Map view">Description of first view...</view>
+        <view index="0" name="WFS Map view">>A map View of geometry list in the generated table</view>
         <!--view index="1" name="name of second view">Description of second view...</view-->
     </views>
 </knimeNode>
