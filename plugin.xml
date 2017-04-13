@@ -59,6 +59,7 @@
 	<node after="org.knime.geo.polygontoline.PolygonToLineNodeFactory" category-path="/geo/conv" factory-class="org.knime.geo.filter.FilterGeomNodeFactory" id="org.knime.geo.filter.FilterGeomNodeFactory"/>
  	<node after="org.knime.geo.filter.FilterGeomNodeFactory" category-path="/geo/conv" factory-class="org.knime.geo.multtoply.MultiPolygonToPolygonNodeFactory" id="org.knime.geo.multtoply.MultiPolygonToPolygonNodeFactory"/>
  	<node after="org.knime.geo.multtoply.MultiPolygonToPolygonNodeFactory" category-path="/geo/conv" factory-class="org.knime.geo.verttopoint.VertexToPointNodeFactory" id="org.knime.geo.verttopoint.VertexToPointNodeFactory"/>
+ 	<node after="org.knime.geo.verttopoint.VertexToPointNodeFactory" category-path="/geo/conv" factory-class="org.knime.geo.linetopoly.LineToPolygonNodeFactory" id="org.knime.geo.linetopoly.LineToPolygonNodeFactory"/>
 	<node category-path="/geo/info" factory-class="org.knime.geo.centroid.CentroidsNodeFactory" id="org.knime.geo.centroid.CentroidsNodeFactory"/>
 	<node category-path="/geo/info" factory-class="org.knime.geo.linemerge.LineMergerNodeFactory" id="org.knime.geo.linemerge.LineMergerNodeFactory"/>
 	<node category-path="/geo/info" factory-class="org.knime.geo.length.LengthNodeFactory" id="org.knime.geo.length.LengthNodeFactory"/>
@@ -80,6 +81,7 @@
     <node category-path="/geo/db" factory-class="org.knime.MyDBReader.MyDBReaderNodeFactory" id="org.knime.MyDBReader.MyDBReaderNodeFactory"/>
     <!--node category-path="/geo/db" factory-class="org.knime.MyPortDBConn.MyPortDBConnNodeFactory" id="org.knime.MyPortDBConn.MyPortDBConnNodeFactory"/-->
     <node category-path="/geo/db" factory-class="org.knime.MyDBWriter.MyDBWriterNodeFactory" id="org.knime.MyDBWriter.MyDBWriterNodeFactory"/>
+
 
 </extension>
 	<extension point="org.knime.core.PortType">
