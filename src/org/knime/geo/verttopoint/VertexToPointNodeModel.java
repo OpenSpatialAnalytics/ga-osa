@@ -104,7 +104,7 @@ public class VertexToPointNodeModel extends NodeModel {
 						}
 		    		}
 					
-					container.addRowToTable(new DefaultRow("Row"+i, cells));
+					container.addRowToTable(new DefaultRow("Row"+(i+1), cells));
 		    		exec.checkCanceled();
 					exec.setProgress((double) i / (double) inTable.size());  					
 	    		}

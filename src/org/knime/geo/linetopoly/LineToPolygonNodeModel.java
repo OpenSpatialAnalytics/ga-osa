@@ -33,6 +33,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
@@ -69,7 +70,8 @@ public class LineToPolygonNodeModel extends NodeModel {
     	
     	RowIterator ri = inTable.iterator();
     	    	        	    	    	    	    	
-    	try{    	
+    	try{
+    		int index = 0;
 	    	for (int i = 0; i < inTable.size(); i++ ) {
 	    		
 	    		DataRow r = ri.next();				    		
@@ -80,45 +82,56 @@ public class LineToPolygonNodeModel extends NodeModel {
 	    			Geometry g = Constants.FeatureToGeometry(geoJsonString);
 	    			String crs = Constants.GetCRS(geoJsonString);
 	    			Geometries geomType = Geometries.get(g);		
-	    			GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
-	    			LinearRing ring = null;
-	    			Polygon polygon = null;
-	    			
+	    				    				    			
 	    			if (geomType == Geometries.LINESTRING){
 	    				LineString lineString = (LineString)g;
-	    				if( lineString.isClosed() ){
-	 	    			   ring = factory.createLinearRing( lineString.getCoordinateSequence() );
-	    				}
-	 	    			else {
-	 	    			   CoordinateSequence sequence = lineString.getCoordinateSequence();
-	 	    			   Coordinate array[] = new Coordinate[ sequence.size() + 1 ];
-	 	    			   for( int j=0; j<sequence.size();j++){
-	 	    				   array[j] = sequence.getCoordinate(j);
-	 	    				   array[array.length-1] = sequence.getCoordinate(0);
-	 	    				   ring = factory.createLinearRing( array );
-	 	    			   }
-	 	    			}
-	 	    			polygon = factory.createPolygon( ring, null );
+	    				Polygon polygon = lineToPolygon(lineString);
+	    				
+	    				String str = Constants.GeometryToGeoJSON(polygon, crs);
+	    				  
+	    				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
+	    				cells[geomIndex] = new StringCell(str);
+	    					
+						for ( int col = 0; col < inTable.getSpec().getNumColumns(); col++ ) {	
+							if (col != geomIndex) {
+								cells[col] = r.getCell(col);
+							}
+			    		}
+						
+						container.addRowToTable(new DefaultRow("Row"+(index+1), cells));
+			    		exec.checkCanceled();
+						exec.setProgress((double) index / (double) inTable.size());  	
+	    				index++;	    				
 	    			}
+	    			else if (geomType == Geometries.MULTILINESTRING){	
+	    				MultiLineString  ml = (MultiLineString)g;
+	    				for (int k = 0; k < ml.getNumGeometries(); k++ ){
+	    					LineString lineString = (LineString) ml.getGeometryN(k);
+	    					Polygon polygon = lineToPolygon(lineString);
+	    					
+	    					String str = Constants.GeometryToGeoJSON(polygon, crs);		    				 
+		    				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
+		    				cells[geomIndex] = new StringCell(str);
+		    					
+							for ( int col = 0; col < inTable.getSpec().getNumColumns(); col++ ) {	
+								if (col != geomIndex) {
+									cells[col] = r.getCell(col);
+								}
+				    		}
+							
+							container.addRowToTable(new DefaultRow("Row"+(index+1), cells));
+				    		exec.checkCanceled();
+							exec.setProgress((double) index / (double) inTable.size());  	
+		    				index++;	 
+	    				}		
+	    			}
+	    			
 	    			else{
-	    				throw new Exception( "Error in row " + i + "Geometry must be of a linestring");
+	    				throw new Exception( "Error in row " + i + ". Geometry must be a line or multiline");
 	    			}
 	    		
 	    			
-    				String str = Constants.GeometryToGeoJSON(polygon, crs);
-  
-    				DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-    				cells[geomIndex] = new StringCell(str);
-    					
-					for ( int col = 0; col < inTable.getSpec().getNumColumns(); col++ ) {	
-						if (col != geomIndex) {
-							cells[col] = r.getCell(col);
-						}
-		    		}
-					
-					container.addRowToTable(new DefaultRow("Row"+i, cells));
-		    		exec.checkCanceled();
-					exec.setProgress((double) i / (double) inTable.size());  					
+    								
 	    		}
 	    				    				    				    			    			    			    			    		    							
 	    	}
@@ -199,6 +212,29 @@ public class LineToPolygonNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // TODO: generated method stub
+    }
+    
+    private static Polygon lineToPolygon(LineString lineString)
+    {
+    	GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
+		LinearRing ring = null;
+		Polygon polygon = null;
+		
+    	if( lineString.isClosed() ){
+			   ring = factory.createLinearRing( lineString.getCoordinateSequence() );
+			}
+			else {
+			   CoordinateSequence sequence = lineString.getCoordinateSequence();
+			   Coordinate array[] = new Coordinate[ sequence.size() + 1 ];
+			   for( int j=0; j<sequence.size();j++){
+				   array[j] = sequence.getCoordinate(j);
+				   array[array.length-1] = sequence.getCoordinate(0);
+				   ring = factory.createLinearRing( array );
+			   }
+			}
+			polygon = factory.createPolygon( ring, null );
+			
+			return polygon;    	
     }
     
     private static DataTableSpec createSpec(DataTableSpec inSpec) throws InvalidSettingsException {

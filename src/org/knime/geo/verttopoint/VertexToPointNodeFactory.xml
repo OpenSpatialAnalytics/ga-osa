@@ -25,7 +25,7 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Geometry table">Table containing a single geometry list in GeoJSON format with other attributes. The geometry column name should be prefixed with name "the_geom"".</inPort>
+        <inPort index="0" name="Geometry table">Table containing a single geometry list in GeoJSON format with other attributes. The geometry column name should be prefixed with name "the_geom".</inPort>
         <!-- possibly more input ports here-->
         <outPort index="0" name="Point Table">Table containing geometries as Multipoint after finding all points from vertices</outPort>
         <!-- possibly more output ports here-->
