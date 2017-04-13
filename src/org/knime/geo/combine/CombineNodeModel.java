@@ -67,13 +67,21 @@ public class CombineNodeModel extends NodeModel {
     	BufferedDataTable inTable = inData[0];
     	int geomIndex = inTable.getSpec().findColumnIndex(Constants.GEOM);
     	int combineIndex = -1;
-    	boolean combinedByAll = false;
+    	boolean combinedByAll = true;
     	int strColSize = inTable.getSpec().getNumColumns()-1;
     	DataTableSpec outSpec;
     	GeometryFactory geometryFactory = new GeometryFactory();
     	
+    	System.out.println(columnNames.getStringValue());
+    	
     	if(columnNames.getStringValue() == null)
     		combinedByAll = true;
+    	else{
+    		if ( columnNames.getStringValue().length() > 0 )
+    			combinedByAll = false;
+    	}
+    	
+    	System.out.println(combinedByAll);
     	
     	if (!combinedByAll)  {
     		combineIndex = inTable.getSpec().findColumnIndex(columnNames.getStringValue());
