@@ -45,7 +45,7 @@ public class MyDBWriterImpl extends DBWriterImpl {
                 }
                 //tg
                  if((strsplit[i].trim().equals("geom") || (strsplit[i].trim().equals("the_geom")))){
-                	 wildcard.append("ST_GeomFromGeoJSON(?)");
+                	 //wildcard.append("ST_GeomFromGeoJSON(?)");
                 	//wildcard.append("ST_GeomFromGeoJSON(split_part(?,'|',2))");
                 	wildcard.append("ST_SetSRID(ST_GeomFromGeoJSON(split_part(?,'|',2)),split_part(?,'\"',4))");
                 }
