@@ -139,6 +139,10 @@ public class MyDBReaderNodeModel extends NodeModel implements FlowVariableProvid
      */
     protected DBReader loadConnectionSettings(final PortObject dbPortObject) throws InvalidSettingsException,Exception{
         String query = parseQuery(m_settings.getQuery());
+        if (query.toLowerCase().contains("st_asgeojson(geom)") || query.toLowerCase().contains("st_asgeojson(the_geom)")){
+        	String s = query.toLowerCase();
+        	query = s.replace("st_asgeojson(geom)", "concat('{\"name\":\"EPSG:', st_srid(geom), '\"}|',st_asgeojson(geom))");
+        } 
         DatabaseQueryConnectionSettings connSettings;
         if ((dbPortObject instanceof DatabaseConnectionPortObject)) {
             DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)dbPortObject;
@@ -265,6 +269,10 @@ public class MyDBReaderNodeModel extends NodeModel implements FlowVariableProvid
     protected DataTableSpec getResultSpec(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException, SQLException {
         String query = parseQuery(m_settings.getQuery());
+        if (query.toLowerCase().contains("st_asgeojson(geom)") || query.toLowerCase().contains("st_asgeojson(the_geom)")){
+        	String s = query.toLowerCase();
+        	query = s.replace("st_asgeojson(geom)", "concat('{\"name\":\"EPSG:', st_srid(geom), '\"}|',st_asgeojson(geom))");
+        } 
         DatabaseQueryConnectionSettings connSettings;
         if (hasDatabaseInputConnection(inSpecs)) {
             DatabaseConnectionPortObjectSpec connSpec =

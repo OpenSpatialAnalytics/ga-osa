@@ -1,7 +1,9 @@
 package org.knime.gdalutils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
@@ -36,6 +38,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
@@ -113,7 +116,8 @@ public class TestClass {
 			//FileWriter writer = new FileWriter("E:\\r.json");
 			//io.writeCRS(crs,  s);
 			collection = featureSource.getFeatures();
-			io.writeFeatureCollection(collection, s);
+			//io.writeFeatureCollection(collection, s);
+			/*
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			JsonParser jp = new JsonParser();
 			JsonElement je = jp.parse(s.toString());
@@ -121,9 +125,33 @@ public class TestClass {
 			FileWriter writer = new FileWriter("E:\\r1.geojson");
 			writer.write(prettyJsonString);
 			System.out.println(prettyJsonString);
+			*/
+			
+			/*
+			io.writeCRS(crs, s);
+			Gson gson = new GsonBuilder().create();			
+			JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+			JsonElement entry=job.get("properties");	
+			String key = entry.toString();
+			
+			System.out.println(key);
+			String[] parts = key.split(":");
+			System.out.println(parts[2].substring(0, parts[2].length()-2));
+			*/
 			
 			
 			dataStore.dispose();
+			
+			CoordinateReferenceSystem crs1 = new FeatureJSON().readCRS(new FileInputStream(new File("E:\\GA\\OSAcutlines.geojson")));
+			io.writeCRS(crs1, s);
+			Gson gson = new GsonBuilder().create();			
+			JsonObject job = gson.fromJson(s.toString(), JsonObject.class);			
+			JsonElement entry=job.get("properties");	
+			String key = entry.toString();
+			
+			System.out.println(key);
+			String[] parts = key.split("\"");
+			System.out.println(parts[3]);
 			
 			//return collection;
 			
