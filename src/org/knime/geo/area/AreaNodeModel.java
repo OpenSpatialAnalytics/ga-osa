@@ -41,7 +41,7 @@ public class AreaNodeModel extends NodeModel {
      */
     protected AreaNodeModel() {
     
-        // TODO: Specify the amount of input and output ports needed.
+        //Specify the amount of input and output ports needed.
         super(1, 1);
     }
 

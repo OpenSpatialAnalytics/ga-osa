@@ -273,6 +273,28 @@ public class Utility {
 		return rankedList;
 	}
 		
+	/***
+	 * prepare and execute gdalwrap command for resampling
+	 * @param inPathList
+	 * @param outDir
+	 * @param directoryFormat
+	 * @param selectedColumn
+	 * @param columnValueNames
+	 * @param columnValueNos
+	 * @param overWrite
+	 * @param tap
+	 * @param resample
+	 * @param workingMemory
+	 * @param oFormat
+	 * @param s_srs
+	 * @param t_srs
+	 * @param xRes
+	 * @param yRes
+	 * @param isRun
+	 * @param isZip
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> ReSampleRaster(List<String> inPathList, String outDir, String directoryFormat,
 			String selectedColumn, List<String> columnValueNames, List<String> columnValueNos,
 			boolean overWrite, boolean tap,
@@ -385,6 +407,18 @@ public class Utility {
 	}
 	
 	
+	/***
+	 * prepare and execute gdal_merge command
+	 * @param allInList
+	 * @param allInPathList
+	 * @param allMergedFileList
+	 * @param outputType
+	 * @param noDataValue
+	 * @param oFormat
+	 * @param isRun
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> MergeRasters(List<List<String>> allInList, List<String> allInPathList, List<String> allMergedFileList, 
 			String outputType, String noDataValue, String oFormat, boolean isRun, ExecutionContext exec)
 	{
@@ -519,7 +553,16 @@ public class Utility {
 		return newMergedFileList;		
 	}
 	
-	
+	/***
+	 * prepare and execute gdal_calc command
+	 * @param sourceFileList
+	 * @param varNameList
+	 * @param destFiles
+	 * @param type
+	 * @param expression
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> GetGdalCalc(List<List<String>> sourceFileList, List<List<String>> varNameList, 
 			List<String> destFiles,  String type, String expression, ExecutionContext exec)
 	{
@@ -577,6 +620,15 @@ public class Utility {
 	}
 	
 	
+	/***
+	 * combine gdal_calc and gdal_polygonize to execute mask raster
+	 * @param sourceFileList
+	 * @param outPath
+	 * @param type
+	 * @param noDataVlue
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> MaskRaster(List<String> sourceFileList, String outPath, String type, String noDataVlue, ExecutionContext exec)
 	{
 		
@@ -630,6 +682,13 @@ public class Utility {
 	}
 	
 	
+	/***
+	 * prepare gdal_polygonize command and execute it
+	 * @param sourceFiles
+	 * @param destFiles
+	 * @param format
+	 * @param exec
+	 */
 	public static void GetGdalPolygonize(List<String> sourceFiles, List<String> destFiles, String format, ExecutionContext exec)
 	{
 		String gdalPath = getGdalPath();
@@ -670,6 +729,22 @@ public class Utility {
 				
 	}
 	
+	/***
+	 * prepare gdalwarp coomand for clipping and execute it
+	 * @param srcClipFile
+	 * @param srcTifFiles
+	 * @param destTifFiles
+	 * @param overWrite
+	 * @param tap
+	 * @param xRes
+	 * @param yRes
+	 * @param nData
+	 * @param woName
+	 * @param woValue
+	 * @param exprList
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> ClipRaster(String srcClipFile, List<String> srcTifFiles, List<String> destTifFiles, 
 			boolean overWrite, boolean tap, String xRes, String yRes, String nData, String woName, String woValue,
 			List<String> exprList, ExecutionContext exec)
@@ -735,6 +810,22 @@ public class Utility {
 		
 	}
 	
+	/***
+	 * prepare gdal_rasterize command and execute it
+	 * @param srcShpFiles
+	 * @param outFileLoc
+	 * @param xRes
+	 * @param yRes
+	 * @param burn
+	 * @param attr
+	 * @param noDataValue
+	 * @param outputType
+	 * @param oFormat
+	 * @param tap
+	 * @param isRun
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> Rasterize(List<String> srcShpFiles, String outFileLoc,  String xRes, String yRes,
 			String burn, String attr, String noDataValue, String outputType, String oFormat,  
 			boolean tap, boolean isRun, ExecutionContext exec)
@@ -796,6 +887,18 @@ public class Utility {
 	}
 	
 	
+	/***
+	 * prepare command for gdal_proximity.py
+	 * @param srcRasterList - list of raster files
+	 * @param outFileLoc - location of output file
+	 * @param noDataValue - required parameter for the command
+	 * @param outputType- required parameter for the command
+	 * @param oFormat- required parameter for the command
+	 * @param distUnit- required parameter for the command
+	 * @param isRun
+	 * @param exec
+	 * @return
+	 */
 	public static List<String> Proximity(List<String> srcRasterList, String outFileLoc, 
 			String noDataValue, String outputType, String oFormat, String distUnit, 
 			boolean isRun, ExecutionContext exec)
@@ -847,7 +950,11 @@ public class Utility {
 		return outFiles;	
 	}
 	
-	
+	/***
+	 * execute gdalinfo command for a source raster file
+	 * @param sourceFile
+	 * @return
+	 */
 	public static String GetGdalInfo(String sourceFile)
 	{
 		sourceFile = sourceFile.replace("\\", "/");
@@ -862,11 +969,21 @@ public class Utility {
 		return outputStr;			
 	}
 	
+	/***
+	 * return the fixed no data value
+	 * @return
+	 */
 	public static String getNoDataValue()
 	{
 		return "-340282346638529993179660072199368212480.000";
 	}
 	
+	/***
+	 * prepare inout path location based on zip file or not
+	 * @param inPath
+	 * @param isZip
+	 * @return
+	 */
 	public static String BuildInputPath(String inPath, boolean isZip)
 	{
 		String zipCommand = "";
@@ -883,7 +1000,11 @@ public class Utility {
 		
 	}
 	
-	
+	/***
+	 * for windows add quotes for large path. Because otherwise it will not work when path name have spaces 
+	 * @param path
+	 * @return
+	 */
 	private static String pathBuilder(String path)
 	{
 		if ( isWindows() )
@@ -892,6 +1013,10 @@ public class Utility {
 			return path;
 	}
 	
+	/***
+	 * extract the gdal path from the system. Specially required for windows
+	 * @return
+	 */
 	private static String getGdalPath()
 	{
 		boolean isWindows = true;
@@ -924,6 +1049,11 @@ public class Utility {
 			return "";
 	}
 	
+	/***
+	 * convert a list in line of text. The command line aguments saved as a list and converted as a string for writing in a file
+	 * @param commandList
+	 * @return
+	 */
 	private static String toCommand(List<String> commandList)
 	{
 		String[] commands = new String[commandList.size()];
@@ -931,10 +1061,17 @@ public class Utility {
 		return StringUtils.join(commands," ");	
 	}
 	
+	/***
+	 * execute independent gdal command in parallel
+	 * @param listOfCommands - list of commands which have command arguments as list
+	 * @param exec - execution environment of KNIME to show the progress bar
+	 * @return
+	 */
 	private static String executeListCommand(List<List<String>> listOfCommands, ExecutionContext exec)  {
 		
 		File f;
 		
+		// set execution path based on windows or linux/mac
 		if ( isWindows() ){
 			f = new File("C:/");
 		}
@@ -944,11 +1081,13 @@ public class Utility {
 		
 		StringBuffer finalOutput = new StringBuffer();
 		
+		//get number of cores and prepare execution service
 		int threads = Runtime.getRuntime().availableProcessors();
 		ExecutorService service = Executors.newFixedThreadPool(threads);
 		
 		List<Future<String>> futures = new ArrayList<Future<String>>();
 		
+		//parse each command in the list and execute them in parallel using java process call
 		for (List<String> commandList : listOfCommands) {
 				StringBuffer output = new StringBuffer();
 		        Callable<String> callable = new Callable<String>() {
@@ -988,7 +1127,7 @@ public class Utility {
 			e.printStackTrace();
 		}
 		
-		while(!finished);
+		while(!finished); // wait until all threads finish their job or the time limit of 24 hour reached
 		 
 		for (Future<String> future : futures) {
 		      try {
@@ -1055,18 +1194,26 @@ public class Utility {
 		return output.toString();
 	}
 	
+	/***
+	 * excecute gdal_merge command using parallel processing
+	 * @param listOfCommands
+	 * @param listOflocations
+	 * @param exec
+	 * @return
+	 */
 	private static String executeMergeCommand(List<List<String>> listOfCommands, List<String> listOflocations, ExecutionContext exec) {
 		
 		StringBuffer finalOutput = new StringBuffer();
 		
-		int threads = Runtime.getRuntime().availableProcessors();
-		ExecutorService service = Executors.newFixedThreadPool(threads);
+		int threads = Runtime.getRuntime().availableProcessors();  //get number of cores in the system
+		ExecutorService service = Executors.newFixedThreadPool(threads); //prepare it as an executorservice
 		
 		List<Future<String>> futures = new ArrayList<Future<String>>();
 		
 		for (List<String> commandList : listOfCommands) {
 			StringBuffer output = new StringBuffer();
 			
+			//process items in commnadlist in parallel and add them a future arraylist to maintain sequentiality in output
 	        Callable<String> callable = new Callable<String>() {
 	            public String call() throws Exception {
 	                ProcessBuilder pb = new ProcessBuilder(commandList);
@@ -1119,6 +1266,11 @@ public class Utility {
 		return finalOutput.toString();
 	}
 	
+	/***
+	 * parse the command from the list and prepare the whole command to write in a text file
+	 * @param fileName
+	 * @param listOfCommands
+	 */
 	private static void writeListCommand(String fileName, List<List<String>> listOfCommands)
 	{
 		BufferedWriter bw = null;
@@ -1142,6 +1294,11 @@ public class Utility {
 	    } 		
 	}
 	
+	/***
+	 * wrtie gdal output log in a file
+	 * @param fileName - the location of log file
+	 * @param outputStr - the log to be written
+	 */
 	private static void writeLog(String fileName, String outputStr)
 	{
 		BufferedWriter bw = null;
@@ -1164,15 +1321,23 @@ public class Utility {
 		
 	}
 	
+	/***
+	 * Merge multiple shape files in a signle shapefile using ogr utility provided by gdal
+	 * @param shapeFiles list of shape files to be merged
+	 * @return the location of merged shape file
+	 */
 	public static String MergeShapeFiles(List<String> shapeFiles)
 	{
+		//extract the root directory of shapefiles using the first shape file in the list
 		String inSourcePath = shapeFiles.get(0);
 		inSourcePath = inSourcePath.replace("\\", "/");
 		String inPath = inSourcePath.substring(0,inSourcePath.lastIndexOf("/"));	
 			
-		if (isWindows() ){						 						
+		//different apporach for windows OS and other OS (linux/mac)
+		if (isWindows() ){			
+			//for each shapefile prepare the command and run it using windows process call
 			for (int i = 0; i < shapeFiles.size(); i++ ) {
-				String inFile = shapeFiles.get(i).replace("\\", "/");
+				String inFile = shapeFiles.get(i).replace("\\", "/");  // update \ value in location for being consistent in all OS 
 				String[] inPaths = inFile.split("/");
 				String inSourceFile = inPaths[inPaths.length-1];
 				String command = "ogr2ogr -f \"ESRI Shapefile\" ";
@@ -1223,6 +1388,10 @@ public class Utility {
 					
 	}	
 	
+	/***
+	 * Check whether it's a windows OS or not other (Linux/Mac)
+	 * @return
+	 */
 	private static boolean isWindows()
 	{
 		String os = System.getProperty("os.name");
@@ -1232,197 +1401,4 @@ public class Utility {
 			return false;
 	}
 		
-	/*
-	private static String executeBatch(String batchFileName, ExecutionContext exec) {
-		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
-		File f;
-		
-		if ( os.startsWith("Windows") ){
-			f = new File("C:/");
-		}
-		else{
-			f = new File("/");
-			try {				
-				Process p1 = null;
-				p1 = Runtime.getRuntime().exec(importPath);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-		}
-		
-		StringBuffer output = new StringBuffer();
-
-		Process p = null;
-		ProcessBuilder pb = null;
-		try {
-			if (isWindows())
-				pb = new ProcessBuilder(new String[]{"cmd", "/c", "start /B", batchFileName});
-			else
-				pb = new ProcessBuilder(new String[]{"bin/sh", "-c" ,batchFileName});
-				
-			pb.directory(f);
-			p = pb.start();
-			exec.checkCanceled();
-			int code = p.waitFor();
-			if (code == 0){
-				BufferedReader reader =
-	                            new BufferedReader(new InputStreamReader(p.getInputStream()));
-	
-	                        String line = "";
-				while ((line = reader.readLine())!= null) {
-					output.append(line + "\n");
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return output.toString();
-	}
-	*/
-	
-	
-	
-	/*
-	private static void writeOutputCommand(String fileName, String command)
-	{
-		BufferedWriter bw = null;
-		
-		String os = System.getProperty("os.name");
-		String importPath = "export PATH=/Library/Frameworks/GDAL.framework/Programs:$PATH";
-		
-        try {          	
-           bw = new BufferedWriter(new FileWriter(fileName, true));
-           if ( !os.startsWith("Windows") ){
-        	   BufferedReader br = new BufferedReader(new FileReader(fileName));
-        	   String text = br.readLine();
-        	   br.close();
-        	   if ( text == null ) {        	   
-        		   bw.write(importPath);
-        	   	   bw.newLine();
-        	   }        	  
-   		   }           
-           bw.write(command);
-           bw.newLine();           
-           bw.flush();
-        }
-        catch (IOException ioe) {
-        	ioe.printStackTrace();
-        } 
-        finally {
-	        if (bw != null) try {
-	        	bw.close();
-	        } 
-	        catch (IOException ioe2) {}
-	    } 		
-	}
-	
-	private static void writeOutputLog(String fileName, String command, String outputStr)
-	{
-		BufferedWriter bw = null;
-		 		
-        try {          	
-           bw = new BufferedWriter(new FileWriter(fileName, true));               
-           bw.write("Command: " + command);
-           bw.newLine();           
-           bw.write(outputStr);
-           bw.newLine();                      
-           bw.flush();
-        }
-        catch (IOException ioe) {
-        	ioe.printStackTrace();
-        } 
-        finally {
-	        if (bw != null) try {
-	        	bw.close();
-	        } 
-	        catch (IOException ioe2) {}
-	    } 		
-		
-	}
-	*/
-	
-	
-	/*
-	public static void main (String args[]) throws IOException
-	{
-		//File folder = new File("C:/Scratch/gadata/Resample/BrisbaneCityCouncil2009");
-		//String newPath = "C:/Scratch/gadata/Resample/6";
-		//File[] listOfFiles = folder.listFiles();
-		File folder = new File("C:/Scratch/gadata/Resample/6");
-		File[] listOfFiles = folder.listFiles();
-		List <String> fList = new ArrayList<String>();
-		
-		for (int i = 0; i < listOfFiles.length; i++) {
-		      if (listOfFiles[i].isFile()) {
-		    	  //File oldFile = new File("C:/Scratch/gadata/Resample/BrisbaneCityCouncil2009/" + listOfFiles[i].getName());
-		    	  //File newFille = new File(newPath+"/"+i+".tif");
-		    	  fList.add(listOfFiles[i].getName());
-		    	  //FileUtils.copyFile(oldFile, newFille);
-		      }
-		}
-		
-		MergeRasters(fList, "C:/Scratch/gadata/Resample/6", "C:/Scratch/gadata/temp/a.tif" , "Float32", "-340282346638529993179660072199368212480.000", "GTiff", true);
-	}
-	*/
-	
-	/*
-	public static void main (String args[])
-	{
-		List<String> zipFileList =  zipFiles("E:\\GA Project\\data");
-		Map<Integer,String> myMap = RankZipFilesByTime(zipFileList);
-		System.out.println(myMap.size());
-		
-		for (Integer key: myMap.keySet() )
-			System.out.println(key.toString());
-		
-		for (String value : myMap.values()){
-			System.out.println(value);
-		} */
-		
-		/*
-		int number = 65;
-		char c = (char)number;
-		System.out.println(Character.toString(c));
-		*/
-		
-		/*
-		String s = GetGdalResampleCommand("E:/GA Project/data/LoganCityCouncil.zip/e479691901005/hdr.adf",
-				"E:/GA Project/data/output",true,"average","500","GTiff","25","25",true);
-		System.out.println(s);
-		*/
-		//String d = System.getenv("PATH");
-		//System.out.println(getGdalPath());
-		//System.out.println(System.getProperty("os.name"));
-		
-		
-		/*
-		String command = "gdalinfo -stats \"C:/Scratch/gadata/LoganeCityCouncilTifMerge/LoganeCityCouncil.tif\"";
-		String e =  executeCommand(command);
-		String e1 = e.substring(e.indexOf("NoData Value"), e.length()-1);
-		String[] e2 = e1.split("\n");
-		String[] e3 = e2[0].split("=");
-		Double d = 0.0;
-		
-		try{
-			
-			d = Double.parseDouble(e3[1]);
-		}
-		catch(Exception ee)
-		{
-			ee.printStackTrace();
-		}
-				
-		System.out.println(d);
-		*/
-		//System.out.println(e);
-		
-	//}
-
 }
