@@ -2,14 +2,17 @@ package org.knime.geo.clip;
 
 import javax.swing.JFileChooser;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.DialogComponentLabel;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
+import org.knime.core.node.util.ColumnFilter;
+import org.knime.gdalutils.Utility;
 /**
  * <code>NodeDialog</code> for the "ClipPolygonToRaster" Node.
  * 
@@ -34,14 +37,6 @@ public class ClipPolygonToRasterNodeDialog extends DefaultNodeSettingsPane {
     	
     	DialogComponentLabel wrapOption = new DialogComponentLabel("Wrap option");
     	
-    	DialogComponentString woNameText = new DialogComponentString(
-    			new SettingsModelString(ClipPolygonToRasterNodeModel.WO_NAME,""), "Name");
-    	
-    	DialogComponentString woValueText = new DialogComponentString(
-    			new SettingsModelString(ClipPolygonToRasterNodeModel.WO_VALUE,""), "Value");
-    
-    	//DialogComponentLabel resoluation = new DialogComponentLabel("Output File Resolution");
-    	
     	DialogComponentString xres = new DialogComponentString(
     			new SettingsModelString(ClipPolygonToRasterNodeModel.XRES,""), "X resolution");
     	
@@ -50,9 +45,7 @@ public class ClipPolygonToRasterNodeDialog extends DefaultNodeSettingsPane {
     	
     	DialogComponentString nodata = new DialogComponentString(
     			new SettingsModelString(ClipPolygonToRasterNodeModel.ND,""), "No Data Value");
-    	
-    	DialogComponentString cwhereText = new DialogComponentString(
-    			new SettingsModelString(ClipPolygonToRasterNodeModel.CWHERE,""), "Attribute query for cutline");
+
     	
     	DialogComponentBoolean overWriteSelection = 
     			new DialogComponentBoolean ( new SettingsModelBoolean(ClipPolygonToRasterNodeModel.OR,true), "Overwrite");
@@ -65,42 +58,45 @@ public class ClipPolygonToRasterNodeDialog extends DefaultNodeSettingsPane {
     	
     	shpFileSelect.setBorderTitle("Clip shape file location");
     	
-    	DialogComponentFileChooser inputPath = 
-    			new DialogComponentFileChooser(new SettingsModelString(ClipPolygonToRasterNodeModel.SRCPATH,""), 
-    					ClipPolygonToRasterNodeModel.SRCPATH, JFileChooser.OPEN_DIALOG, true);
-    	
-    	inputPath.setBorderTitle("Input files location");
     	
     	DialogComponentFileChooser outputPath = 
     			new DialogComponentFileChooser(new SettingsModelString(ClipPolygonToRasterNodeModel.OUTPATH,""), 
     					ClipPolygonToRasterNodeModel.OUTPATH, JFileChooser.SAVE_DIALOG, true);
     	
-    	outputPath.setBorderTitle("Output files location");
+    	outputPath.setBorderTitle("Output file location");
+    	    	
+    	DialogComponentColumnNameSelection outfileName = 
+    			new DialogComponentColumnNameSelection(new SettingsModelString(ClipPolygonToRasterNodeModel.OUTFILENAME,""),
+    					"Output file name",0,false,true, filterColumn);
     	
-    	
+    	DialogComponentColumnNameSelection shapeFileAttr = 
+    			new DialogComponentColumnNameSelection(new SettingsModelString(ClipPolygonToRasterNodeModel.SHPATTR,""),
+    					"Shape File Attribute",0,false,true, filterColumn);
+    	    	
     	
     	addDialogComponent(tapSelection);
     	addDialogComponent(wrapOption);
-    	addDialogComponent(woNameText);
-    	addDialogComponent(woValueText);
-    	//addDialogComponent(resoluation);
     	addDialogComponent(xres);
     	addDialogComponent(yres);
     	addDialogComponent(nodata);
-    	addDialogComponent(cwhereText);
     	addDialogComponent(overWriteSelection);
     	addDialogComponent(shpFileSelect);
-    	addDialogComponent(inputPath);
     	addDialogComponent(outputPath);
+    	addDialogComponent(outfileName);
+    	addDialogComponent(shapeFileAttr);
     	
-    	/*
-    	DialogComponentFileChooser outputPath = 
-    			new DialogComponentFileChooser(new SettingsModelString(ClipPolygonToRasterNodeModel.OUTFILE,""), 
-    					ClipPolygonToRasterNodeModel.OUTFILE, JFileChooser.OPEN_DIALOG);
-    	
-    	addDialogComponent(outputPath);
-    	*/
-
     }
+    
+    ColumnFilter filterColumn = new ColumnFilter() {
+        @Override
+        public boolean includeColumn(DataColumnSpec dataColumnSpec) {
+            return !(dataColumnSpec.getName().compareTo(Utility.LOC_COLUMN) == 0);
+        }
+
+		@Override
+		public String allFilteredMsg() {
+			return "No column is available";
+		}
+	};
 }
 

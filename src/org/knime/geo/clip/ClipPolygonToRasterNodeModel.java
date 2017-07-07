@@ -42,32 +42,27 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 	
 	 static final String OR = "over_write";
 	 static final String TAP = "tap";
-	 static final String WO_NAME = "wo_name";
-	 static final String WO_VALUE = "wo_value";
 	 static final String XRES = "xres";
 	 static final String YRES = "yres";
 	 static final String ND = "nodata_value";
 	 static final String CWHERE = "cwhere";
 	 static final String INPATH = "inpath";
 	 static final String OUTPATH = "outpath";
-	 static final String SRCPATH = "srcPath";
+	 static final String OUTFILENAME = "outut_file_name";
+	 static final String SHPATTR = "shapefile_attributes";
 	 
 	
 	 public final SettingsModelBoolean overWrite = new SettingsModelBoolean(OR,true);
 	 public final SettingsModelBoolean tap = new SettingsModelBoolean(TAP,false);
 	 public final SettingsModelString xRes = new SettingsModelString(XRES,"");
 	 public final SettingsModelString yRes = new SettingsModelString(YRES,"");
-	 public final SettingsModelString woName = new SettingsModelString(WO_NAME,"");
-	 public final SettingsModelString woValue = new SettingsModelString(WO_VALUE,"");
 	 public final SettingsModelString noDataValue = new SettingsModelString(ND,"");
 	 public final SettingsModelString cwhere = new SettingsModelString(CWHERE,"");
 	 public final SettingsModelString inputShpFile = new SettingsModelString(INPATH,"");
 	 public final SettingsModelString outpath = new SettingsModelString(OUTPATH,"");
-	 public final SettingsModelString srcPath = new SettingsModelString(SRCPATH,"");
-	
-		
-	//static final String OUTFILE = "output_file";
-	//public final SettingsModelString outFile = new SettingsModelString(OUTFILE,"");
+	 public final SettingsModelString outputFileName = new SettingsModelString(OUTFILENAME,"");
+	 public final SettingsModelString shapefileAttribute = new SettingsModelString(SHPATTR,"");
+
 	
 
     protected ClipPolygonToRasterNodeModel() {
@@ -89,36 +84,9 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 		
 		String overlapShapeFile = inputShpFile.getStringValue();
 		int loc = inTable.getSpec().findColumnIndex(Utility.LOC_COLUMN);
-		int numColumns = inTable.getSpec().getNumColumns();
-		String columNames[] = inTable.getSpec().getColumnNames();
-		boolean useOverlap = false;
-		boolean useRank = false;
-		boolean hasRank = false;
-		boolean useOverlapOnly = false;
-		int ovIndex = -1;
 		
-		for (int col = 0; col < numColumns; col++) {
-    		if (columNames[col].contains(Constants.RANK) ){
-    			hasRank = true;
-    			break;
-    		}
-    	}
 		
-		if (Arrays.asList(columNames).contains(Constants.OVID) && hasRank  ){
-			useOverlap = true;
-			ovIndex = inTable.getSpec().findColumnIndex(Constants.OVID);
-		}
-		
-		if (!Arrays.asList(columNames).contains(Constants.OVID) && hasRank ){
-			useRank = true;
-		}
-		
-		if (Arrays.asList(columNames).contains(Constants.OVID) && !hasRank ){
-			useOverlapOnly = true;
-			ovIndex = inTable.getSpec().findColumnIndex(Constants.OVID);
-		}
-		
-		DataTableSpec outSpec = createSpec(inTable.getSpec(),useOverlap, useRank, useOverlapOnly);
+		DataTableSpec outSpec = createSpec(inTable.getSpec(),false, false, false);
 		BufferedDataContainer container = exec.createDataContainer(outSpec);
 		
 		List<String> srcTifFileList = new ArrayList<String>(); 
@@ -128,99 +96,38 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
 				
 		for (DataRow r : inTable){
 			
-	    	if (useOverlap){
-	    		int j = 0;
-	    		int rankIndexs[] = new int[2];
-	        	for (int col = 0; col < numColumns; col++) {
-	        		if (columNames[col].contains(Constants.RANK) ){
-	        			rankIndexs[j] = col;
-	        			j++;
-	        			if (j==2)
-	        				break;
-	        		}
-	        	}
-	        	
-	        	String ovidStr = r.getCell(ovIndex).toString();
-	        	String expr = Constants.OVID + "=" + ovidStr;
-	        	String srcFolder = srcPath.getStringValue().replace("\\", "/");
-	        	String outFolder = outpath.getStringValue().replace("\\", "/");
-	
-	    		
-	    		String srcTifFile1 = srcFolder + "/" + r.getCell(rankIndexs[0]).toString() + ".tif";
-	    		String srcTifFile2 = srcFolder + "/" + r.getCell(rankIndexs[1]).toString() + ".tif";
-	    		
-	    		String destFile1 = outFolder + "/" + ovidStr +"a.tif";
-	    		String destFile2 = outFolder + "/" + ovidStr +"b.tif";
-	    		
-	    		srcTifFileList.add(srcTifFile1);
-	    		srcTifFileList.add(srcTifFile2);
-	    		destFileList.add(destFile1);
-	    		destFileList.add(destFile2);
-	    		exprList.add(expr);
-	    		exprList.add(expr);
-	    		
-	    		DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-				cells[0] = new StringCell(destFile1);
-				cells[1] = new StringCell(destFile2);
-				cells[2] = r.getCell(ovIndex);
-				cellList.add(cells);
-				
-	    	}
+ 		StringCell inPathCell = (StringCell)r.getCell(loc);
+    	String srcTifFile = inPathCell.getStringValue();
+    	srcTifFile = srcTifFile.replace("\\", "/");
+		String filenames[] = srcTifFile.split("/");
+		String outFolder = outpath.getStringValue().replace("\\", "/");
+    	String destFile = outFolder+"/"+filenames[filenames.length-1];
+    	
+    	/*
+    	 * Bugs with Clip Raster Node was fixed by Arezou.
+    	 */
+    	String OutName = outputFileName.getStringValue();
+    	System.out.println(destFile);
+    	if(OutName != null){
+    		int index = inTable.getSpec().findColumnIndex(OutName);
+    		destFile = outFolder+"/"+ r.getCell(index).toString() + ".tif";
+    	}
+    	
+
+    	String attribute = shapefileAttribute.getStringValue();
+    	if(attribute != null){
+    		int index_att = inTable.getSpec().findColumnIndex(attribute);
+    		String expr = attribute + "=" + r.getCell(index_att).toString();
+    		exprList.add(expr);
+    	}
+    	
+    	srcTifFileList.add(srcTifFile);
+    	destFileList.add(destFile);
+    	
+    	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
+		cells[0] = new StringCell(destFile);
+		cellList.add(cells);
 	    	
-	    	else if (useRank){
-	    		int rnkIndex = inTable.getSpec().findColumnIndex(Constants.RANK);
-	    		if (rnkIndex == -1)
-	    			rnkIndex = inTable.getSpec().findColumnIndex(Constants.RANK+"_1");
-	    		String rankStr = r.getCell(rnkIndex).toString();
-	        	String expr = Constants.RANK + "=" + rankStr;
-	        	
-	        	String outFolder = outpath.getStringValue().replace("\\", "/");
-	        	String destFile = outFolder+"/"+rankStr + ".tif";
-	        	String srcTifFile = srcPath.getStringValue().replace("\\", "/") + "/" + rankStr + ".tif";
-	        	
-	        	srcTifFileList.add(srcTifFile);
-	        	destFileList.add(destFile);
-	        	exprList.add(expr);
-	        	
-	        	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-				cells[0] = new StringCell(destFile);
-				cells[1] = r.getCell(rnkIndex);
-				cellList.add(cells);
-	    	}
-	    	else if (useOverlapOnly){
-	    		String ovidStr = r.getCell(ovIndex).toString();
-	        	String expr = Constants.OVID + "=" + ovidStr;
-	        	
-	        	String outFolder = outpath.getStringValue().replace("\\", "/");
-	        	String destFile = outFolder+"/"+ovidStr + ".tif";
-	        	StringCell inPathCell = (StringCell)r.getCell(loc);
-		    	String srcTifFile = inPathCell.getStringValue();
-	        	
-		    	srcTifFileList.add(srcTifFile);
-	        	destFileList.add(destFile);
-	        	exprList.add(expr);
-	        	
-	        	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-				cells[0] = new StringCell(destFile);
-				cells[1] = r.getCell(ovIndex);
-				cellList.add(cells);
-	    	}
-	    	else{
-	    		StringCell inPathCell = (StringCell)r.getCell(loc);
-		    	String srcTifFile = inPathCell.getStringValue();
-		    	srcTifFile = srcTifFile.replace("\\", "/");
-	    		String filenames[] = srcTifFile.split("/");
-	    		String outFolder = outpath.getStringValue().replace("\\", "/");
-	        	String destFile = outFolder+"/"+filenames[filenames.length-1];
-	        	
-	        	srcTifFileList.add(srcTifFile);
-	        	destFileList.add(destFile);
-	        	exprList.add(cwhere.getStringValue());
-	        	
-		    	DataCell[] cells = new DataCell[outSpec.getNumColumns()];
-				cells[0] = new StringCell(destFile);
-				cellList.add(cells);
-	    	}
 			exec.checkCanceled();
 			//exec.setProgress((double) i / (double) s);    	
 		}
@@ -229,7 +136,7 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
     			overWrite.getBooleanValue(), tap.getBooleanValue(), 
     			xRes.getStringValue(), yRes.getStringValue(),
     			noDataValue.getStringValue(),
-    			woName.getStringValue(),woValue.getStringValue(),exprList, exec);
+    			"","",exprList, exec);
 		
 		int i = 1;
 		for (DataCell [] cells : cellList){
@@ -279,13 +186,15 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
     	this.tap.saveSettingsTo(settings);
     	this.xRes.saveSettingsTo(settings);
     	this.yRes.saveSettingsTo(settings);
-    	this.woName.saveSettingsTo(settings);
-    	this.woValue.saveSettingsTo(settings);
+    	//this.woName.saveSettingsTo(settings);
+    	//this.woValue.saveSettingsTo(settings);
     	this.noDataValue.saveSettingsTo(settings);
-    	this.cwhere.saveSettingsTo(settings);
+    	//this.cwhere.saveSettingsTo(settings);
     	this.inputShpFile.saveSettingsTo(settings);
-    	this.srcPath.saveSettingsTo(settings);
+    	//this.srcPath.saveSettingsTo(settings);
     	this.outpath.saveSettingsTo(settings);
+    	this.outputFileName.saveSettingsTo(settings);
+    	this.shapefileAttribute.saveSettingsTo(settings);
     }
 
     /**
@@ -294,18 +203,15 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        //this.outFile.loadSettingsFrom(settings);
     	this.overWrite.loadSettingsFrom(settings);
     	this.tap.loadSettingsFrom(settings);
     	this.xRes.loadSettingsFrom(settings);
     	this.yRes.loadSettingsFrom(settings);
-    	this.woName.loadSettingsFrom(settings);
-    	this.woValue.loadSettingsFrom(settings);
     	this.noDataValue.loadSettingsFrom(settings);
-    	this.cwhere.loadSettingsFrom(settings);
     	this.inputShpFile.loadSettingsFrom(settings);
-    	this.srcPath.loadSettingsFrom(settings);
     	this.outpath.loadSettingsFrom(settings);
+    	this.outputFileName.loadSettingsFrom(settings);
+    	this.shapefileAttribute.loadSettingsFrom(settings);
     }
 
     /**
@@ -314,18 +220,15 @@ public class ClipPolygonToRasterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        //this.outFile.validateSettings(settings);
     	this.overWrite.validateSettings(settings);
     	this.tap.validateSettings(settings);
     	this.xRes.validateSettings(settings);
     	this.yRes.validateSettings(settings);
-    	this.woName.validateSettings(settings);
-    	this.woValue.validateSettings(settings);
     	this.noDataValue.validateSettings(settings);
-    	this.cwhere.validateSettings(settings);
     	this.inputShpFile.validateSettings(settings);
-    	this.srcPath.validateSettings(settings);
     	this.outpath.validateSettings(settings);
+    	this.outputFileName.validateSettings(settings);
+    	this.shapefileAttribute.validateSettings(settings);
     }
     
     /**
