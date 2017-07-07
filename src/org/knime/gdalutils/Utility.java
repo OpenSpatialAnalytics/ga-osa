@@ -754,11 +754,13 @@ public class Utility {
 		
 		srcClipFile = srcClipFile.replace("\\", "/");
 		
+		
+		
 		for(int i = 0; i < srcTifFiles.size(); i++ ) {
 			
 			String srcTifFile = srcTifFiles.get(i);
 			String destTifFile = destTifFiles.get(i);
-			String cWhere = exprList.get(i);
+			
 		
 			srcTifFile = srcTifFile.replace("\\", "/");
 			destTifFile = destTifFile.replace("\\", "/");
@@ -784,12 +786,13 @@ public class Utility {
 			}
 			commandList.add("-cutline");
 			commandList.add(pathBuilder(srcClipFile));
-			if (!cWhere.isEmpty()) {
+			if (!exprList.isEmpty()) {
+				String cWhere = exprList.get(i);
 				commandList.add("-cwhere");
-				String[] cutlineFeatures = cWhere.split("=");
-				String name = cutlineFeatures[0].trim();
-				int value = Integer.parseInt(cutlineFeatures[1].trim());
-				commandList.add("\""+name+" = "+value+"\"");
+				//String[] cutlineFeatures = cWhere.split("=");
+				//String name = cutlineFeatures[0].trim();
+				//int value = Integer.parseInt(cutlineFeatures[1].trim());
+				commandList.add("\""+cWhere+"\"");
 			}
 			commandList.add("-crop_to_cutline");
 			commandList.add(pathBuilder(srcTifFile));
